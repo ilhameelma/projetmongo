@@ -1,0 +1,16 @@
+# Ignorer tous les fichiers JSON volumineux
+data/air_quality.json
+data/city_hour.json
+data/station_hour.json
+data/stations.json
+
+# Ignorer fichiers temporaires / logs
+*.log
+*.tmp
+
+# Ignorer dossiers système
+__pycache__/
+.DS_Store
+
+# Node.js (si tu as des packages)
+node_modules/
