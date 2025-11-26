@@ -1,98 +1,91 @@
-version: '3.8'
+version: '3.9'
 
 services:
-  # Config Servers
-  mongodb-config-1:
+  # Config servers
+  config1:
     image: mongo:6.0
     container_name: config1
-    hostname: config1
-    command: mongod --configsvr --replSet configrs --bind_ip_all --port 27017
-    volumes:
-      - mongodb_config_data_1:/data/db
-      - mongodb_config_data_1:/data/configdb
+    command: ["mongod", "--configsvr", "--replSet", "configrs", "--port", "27017"]
     networks:
       - mongodb-cluster
+    ports:
+      - "27019:27017"
+    volumes:
+      - config1_data:/data/db
 
-  mongodb-config-2:
+  config2:
     image: mongo:6.0
     container_name: config2
-    hostname: config2
-    command: mongod --configsvr --replSet configrs --bind_ip_all --port 27017
-    volumes:
-      - mongodb_config_data_2:/data/db
-      - mongodb_config_data_2:/data/configdb
+    command: ["mongod", "--configsvr", "--replSet", "configrs", "--port", "27017"]
     networks:
       - mongodb-cluster
+    ports:
+      - "27020:27017"
+    volumes:
+      - config2_data:/data/db
 
-  mongodb-config-3:
+  config3:
     image: mongo:6.0
     container_name: config3
-    hostname: config3
-    command: mongod --configsvr --replSet configrs --bind_ip_all --port 27017
-    volumes:
-      - mongodb_config_data_3:/data/db
-      - mongodb_config_data_3:/data/configdb
+    command: ["mongod", "--configsvr", "--replSet", "configrs", "--port", "27017"]
     networks:
       - mongodb-cluster
+    ports:
+      - "27021:27017"
+    volumes:
+      - config3_data:/data/db
 
-  # Shard 1
-  mongodb-shard1:
+  # Shards
+  shard1:
     image: mongo:6.0
     container_name: shard1
-    hostname: shard1
-    command: mongod --shardsvr --bind_ip_all --port 27017
-    volumes:
-      - mongodb_shard1_data:/data/db
+    command: ["mongod", "--shardsvr", "--replSet", "shard1rs", "--port", "27017"]
     networks:
       - mongodb-cluster
+    ports:
+      - "27117:27017"
+    volumes:
+      - shard1_data:/data/db
 
-  # Shard 2
-  mongodb-shard2:
+  shard2:
     image: mongo:6.0
     container_name: shard2
-    hostname: shard2
-    command: mongod --shardsvr --bind_ip_all --port 27017
-    volumes:
-      - mongodb_shard2_data:/data/db
+    command: ["mongod", "--shardsvr", "--replSet", "shard2rs", "--port", "27017"]
     networks:
       - mongodb-cluster
+    ports:
+      - "27217:27017"
+    volumes:
+      - shard2_data:/data/db
 
-  # Shard 3
-  mongodb-shard3:
+  shard3:
     image: mongo:6.0
     container_name: shard3
-    hostname: shard3
-    command: mongod --shardsvr --bind_ip_all --port 27017
-    volumes:
-      - mongodb_shard3_data:/data/db
+    command: ["mongod", "--shardsvr", "--replSet", "shard3rs", "--port", "27017"]
     networks:
       - mongodb-cluster
+    ports:
+      - "27317:27017"
+    volumes:
+      - shard3_data:/data/db
 
-  # Mongos Router
+  # Mongos router
   mongos:
     image: mongo:6.0
     container_name: mongos
-    hostname: mongos
-    command: mongos --configdb configrs/config1:27017,config2:27017,config3:27017 --bind_ip_all --port 27017
-    ports:
-      - "27018:27017"
-    depends_on:
-      - mongodb-config-1
-      - mongodb-config-2
-      - mongodb-config-3
-      - mongodb-shard1
-      - mongodb-shard2
-      - mongodb-shard3
+    command: ["mongos", "--configdb", "configrs/config1:27017,config2:27017,config3:27017", "--bind_ip_all"]
     networks:
       - mongodb-cluster
+    ports:
+      - "27017:27017"
 
 volumes:
-  mongodb_config_data_1:
-  mongodb_config_data_2:
-  mongodb_config_data_3:
-  mongodb_shard1_data:
-  mongodb_shard2_data:
-  mongodb_shard3_data:
+  config1_data:
+  config2_data:
+  config3_data:
+  shard1_data:
+  shard2_data:
+  shard3_data:
 
 networks:
   mongodb-cluster:
