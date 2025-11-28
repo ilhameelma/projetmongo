@@ -14,3 +14,6 @@ __pycache__/
 
 # Node.js (si tu as des packages)
 node_modules/
+.env
+.env
+node_modules/

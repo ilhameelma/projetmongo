@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qualité de l'Air en Inde (2015-2020)</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-wind"></i>
+                    <div>
+                        <h1>Qualité de l'Air en Inde</h1>
+                        <span>Analyse des données 2015-2020</span>
+                    </div>
+                </div>
+                <div class="filters">
+                    <div class="filter-item">
+                        <label for="city-select"><i class="fas fa-city"></i> Ville</label>
+                        <select id="city-select">
+                            <option value="all">Toutes les villes</option>
+                            <option value="Delhi">Delhi</option>
+                            <option value="Ahmedabad">Ahmedabad</option>
+                            <option value="Gurugram">Gurugram</option>
+                            <option value="Patna">Patna</option>
+                            <option value="Kolkata">Kolkata</option>
+                            <option value="Visakhapatnam">Visakhapatnam</option>
+                        </select>
+                    </div>
+                    <div class="filter-item">
+                        <label for="year-select"><i class="fas fa-calendar"></i> Année</label>
+                        <select id="year-select">
+                            <option value="all">Toutes les années</option>
+                            <option value="2015">2015</option>
+                            <option value="2016">2016</option>
+                            <option value="2017">2017</option>
+                            <option value="2018">2018</option>
+                            <option value="2019">2019</option>
+                            <option value="2020">2020</option>
+                        </select>
+                    </div>
+                    <div class="filter-item">
+                        <label for="season-select"><i class="fas fa-sun"></i> Saison</label>
+                        <select id="season-select">
+                            <option value="all">Toutes les saisons</option>
+                            <option value="winter">Hiver (Déc-Fév)</option>
+                            <option value="summer">Été (Mar-Mai)</option>
+                            <option value="monsoon">Mousson (Juin-Sept)</option>
+                            <option value="autumn">Automne (Oct-Nov)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="filter-info">
+                <p><i class="fas fa-info-circle"></i> Les filtres mettent à jour automatiquement tous les graphiques et tableaux ci-dessous</p>
+            </div>
+        </div>
+    </header>
+    
+    <main class="dashboard">
+        <div class="container">
+            <!-- Indicateur de chargement -->
+            <div id="loadingIndicator" class="loading-indicator" style="display: none;">
+                <div class="loading-spinner">
+                    <i class="fas fa-sync fa-spin"></i>
+                    <span>Chargement des données...</span>
+                </div>
+            </div>
+
+            <!-- Message d'erreur -->
+            <div id="errorMessage" class="error-message" style="display: none;">
+                <div class="error-content">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <div>
+                        <h4>Erreur de chargement des données</h4>
+                        <p>Impossible de charger les données depuis le serveur. Vérifiez votre connexion.</p>
+                        <button onclick="retryLoading()">Réessayer</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cartes de statistiques -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <h3>PM2.5 Moyen</h3>
+                        <div class="stat-icon" style="background-color: var(--accent);">
+                            <i class="fas fa-smog"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="pm25-value">Chargement...</div>
+                    <div class="stat-label">Particules fines</div>
+                    <div class="stat-trend trend-up">
+                        <i class="fas fa-arrow-up"></i>
+                        <span id="pm25-trend">Chargement...</span>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <h3>PM10 Moyen</h3>
+                        <div class="stat-icon" style="background-color: var(--warning);">
+                            <i class="fas fa-industry"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="pm10-value">Chargement...</div>
+                    <div class="stat-label">Particules en suspension</div>
+                    <div class="stat-trend trend-down">
+                        <i class="fas fa-arrow-down"></i>
+                        <span id="pm10-trend">Chargement...</span>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <h3>AQI Moyen</h3>
+                        <div class="stat-icon" style="background-color: var(--secondary);">
+                            <i class="fas fa-lungs"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="aqi-value">Chargement...</div>
+                    <div class="stat-label">Indice de qualité de l'air</div>
+                    <div class="stat-trend trend-up">
+                        <i class="fas fa-arrow-up"></i>
+                        <span id="aqi-trend">Chargement...</span>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <h3>Stations Actives</h3>
+                        <div class="stat-icon" style="background-color: var(--success);">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="stations-value">Chargement...</div>
+                    <div class="stat-label">Points de surveillance</div>
+                    <div class="stat-trend trend-up">
+                        <i class="fas fa-arrow-up"></i>
+                        <span id="stations-trend">Chargement...</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- NIVEAU 1: Deux graphiques principaux (pleine largeur) -->
+            <section class="chart-section level-1">
+                <h2 class="section-title">Vue d'Ensemble</h2>
+                <div class="charts-level-1">
+                    <div class="chart-container main-chart">
+                        <div class="chart-header">
+                            <h3 class="chart-title"><i class="fas fa-chart-line"></i> Évolution de la Pollution (2015-2020)</h3>
+                            <div class="chart-actions">
+                                <button title="Télécharger"><i class="fas fa-download"></i></button>
+                                <button title="Plein écran"><i class="fas fa-expand"></i></button>
+                            </div>
+                        </div>
+                        <canvas id="pollutionChart"></canvas>
+                        <div class="chart-description">
+                            <p><strong>Analyse :</strong> Tendances annuelles des principaux polluants. Données en temps réel depuis la base MongoDB.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container main-chart">
+                        <div class="chart-header">
+                            <h3 class="chart-title"><i class="fas fa-toggle-on"></i> Statut des Stations</h3>
+                            <div class="chart-actions">
+                                <button title="Télécharger"><i class="fas fa-download"></i></button>
+                                <button title="Plein écran"><i class="fas fa-expand"></i></button>
+                            </div>
+                        </div>
+                        <canvas id="stationsStatusChart"></canvas>
+                        <div class="chart-description">
+                            <p><strong>Analyse :</strong> Répartition des stations selon leur statut opérationnel.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- NIVEAU 2: Deux graphiques moyens -->
+            <section class="chart-section level-2">
+                <h2 class="section-title">Analyse par Ville</h2>
+                <div class="charts-level-2">
+                    <div class="chart-container medium-chart">
+                        <div class="chart-header">
+                            <h3 class="chart-title"><i class="fas fa-chart-bar"></i> Pollution par Ville</h3>
+                            <div class="chart-actions">
+                                <button title="Télécharger"><i class="fas fa-download"></i></button>
+                            </div>
+                        </div>
+                        <canvas id="cityPollutionChart"></canvas>
+                        <div class="chart-description">
+                            <p>Comparaison des niveaux de pollution entre les principales villes</p>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container medium-chart">
+                        <div class="chart-header">
+                            <h3 class="chart-title"><i class="fas fa-map-marked-alt"></i> Stations par Ville</h3>
+                            <div class="chart-actions">
+                                <button title="Télécharger"><i class="fas fa-download"></i></button>
+                            </div>
+                        </div>
+                        <canvas id="stationsByCityChart"></canvas>
+                        <div class="chart-description">
+                            <p>Répartition du réseau de surveillance sur le territoire</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- NIVEAU 3: Quatre graphiques (regroupés) -->
+            <section class="chart-section level-3">
+                <h2 class="section-title">Analyse Temporelle</h2>
+                <div class="charts-level-3">
+                    <div class="chart-container medium-chart">
+                        <div class="chart-header">
+                            <h3 class="chart-title"><i class="fas fa-cloud-sun"></i> Variation Saisonnière</h3>
+                            <div class="chart-actions">
+                                <button title="Télécharger"><i class="fas fa-download"></i></button>
+                            </div>
+                        </div>
+                        <canvas id="seasonalChart"></canvas>
+                        <div class="chart-description">
+                            <p>Impact des saisons sur les niveaux de pollution</p>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container medium-chart">
+                        <div class="chart-header">
+                            <h3 class="chart-title"><i class="fas fa-chart-doughnut"></i> Distribution AQI</h3>
+                            <div class="chart-actions">
+                                <button title="Télécharger"><i class="fas fa-download"></i></button>
+                            </div>
+                        </div>
+                        <canvas id="aqiDistributionChart"></canvas>
+                        <div class="chart-description">
+                            <p>Répartition des catégories de qualité de l'air</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Tableau Top 10 des stations les plus polluées -->
+            <div class="data-table">
+                <h3><i class="fas fa-table"></i> Top 10 des Stations avec la Plus Haute Pollution</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Station</th>
+                            <th>Ville</th>
+                            <th>PM2.5 Moyen</th>
+                            <th>PM10 Moyen</th>
+                            <th>AQI Moyen</th>
+                            <th>Catégorie AQI</th>
+                        </tr>
+                    </thead>
+                    <tbody id="top-stations-body">
+                        <!-- Les données seront chargées dynamiquement -->
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 40px;">
+                                <div class="loading"></div>
+                                <p>Chargement des données...</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="logo">
+                    <i class="fas fa-wind"></i>
+                    <div>
+                        <h3>Qualité de l'Air en Inde</h3>
+                        <span>Données 2015-2020 - Analyse en temps réel</span>
+                    </div>
+                </div>
+                <div class="footer-links">
+                    <a href="#"><i class="fas fa-info-circle"></i> À propos</a>
+                    <a href="#"><i class="fas fa-book"></i> Méthodologie</a>
+                    <a href="#"><i class="fas fa-envelope"></i> Contact</a>
+                    <a href="#"><i class="fas fa-database"></i> API</a>
+                </div>
+                <div class="footer-info">
+                    <p><i class="fas fa-sync-alt"></i> Dernière mise à jour: <span id="lastUpdate">Chargement...</span></p>
+                    <p><i class="fas fa-database"></i> Statut: <span id="apiStatus">Connexion...</span></p>
+                    <p>&copy; 2024 Analyse de la Qualité de l'Air. Tous droits réservés.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="charts.js"></script>
+</body>
+</html>
