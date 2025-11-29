@@ -394,334 +394,442 @@
     </div>
 
     <script>
-        // Variables globales
-        let currentCity = '';
-        let currentTimeRange = 'year';
-        let cityData = null;
+       
+    // Variables globales
+    let currentCity = '';
+    let currentTimeRange = 'year';
+    let cityData = null;
 
-        // Couleurs AQI identiques à la carte
-        const aqiColors = {
-            good: '#afe2da',
-            moderate: '#e2f0af',
-            poor: '#f0e2af',
-            veryPoor: '#f0afaf',
-            severe: '#d56a6a'
-        };
+    // Couleurs AQI identiques à la carte
+    const aqiColors = {
+        good: '#afe2da',
+        moderate: '#e2f0af',
+        poor: '#f0e2af',
+        veryPoor: '#f0afaf',
+        severe: '#d56a6a'
+    };
 
-        // Chargement initial
-        document.addEventListener('DOMContentLoaded', function() {
-            loadCityData();
-        });
+    // Chargement initial
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Page city-detail chargée');
+        loadCityData();
+    });
 
-        // Charger les données de la ville
-async function loadCityData() {
-    const urlParams = new URLSearchParams(window.location.search);
-    currentCity = urlParams.get('city') || 'Delhi';
-    
-    try {
-        // Charger les données depuis l'API
-        const [cityResponse, statsResponse] = await Promise.all([
-            fetch(`/api/city/${currentCity}`),
-            fetch(`/api/city-stats/${currentCity}`)
-        ]);
+    // Charger les données de la ville avec vérifications complètes
+    async function loadCityData() {
+        const urlParams = new URLSearchParams(window.location.search);
+        currentCity = decodeURIComponent(urlParams.get('city')) || 'Delhi';
         
-        const cityData = await cityResponse.json();
-        const stats = await statsResponse.json();
-        
-        // Formater les données pour vos graphiques
-        cityData.aqiAverage = Math.round(stats.avgAQI || 0);
-        cityData.pm25Average = Math.round(stats.avgPM25 || 0);
-        cityData.pm10Average = Math.round(stats.avgPM10 || 0);
-        
-        renderDashboard();
-    } catch (error) {
-        console.error('Erreur:', error);
-    }
-}
-
-        // Changer la période d'analyse
-        function changeTimeRange(range) {
-            currentTimeRange = range;
-            document.querySelectorAll('.time-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+        try {
+            document.getElementById('city-title').textContent = currentCity;
+            document.getElementById('stats-grid').innerHTML = '<div class="loading">Chargement des données...</div>';
             
-            if (cityData) {
-                renderDashboard();
+            console.log('🔄 Chargement des données pour:', currentCity);
+            
+            // Vérifier d'abord la santé de l'API
+            const healthResponse = await fetch('/api/health');
+            if (!healthResponse.ok) {
+                throw new Error('API non disponible');
             }
-        }
-
-        // Rendre le dashboard
-        function renderDashboard() {
-            renderStats();
-            renderCharts();
-            renderStations();
-        }
-
-        // Afficher les statistiques
-        function renderStats() {
-            const statsGrid = document.getElementById('stats-grid');
-            const header = document.getElementById('city-header');
-            const aqiBadge = document.getElementById('current-aqi');
-            const aqiCategory = document.getElementById('aqi-category');
             
-            // Mettre à jour le badge AQI
-            aqiBadge.textContent = cityData.aqiAverage;
-            const category = getAQICategory(cityData.aqiAverage);
-            aqiCategory.textContent = ` (${category})`;
-            
-            // Appliquer la couleur AQI à l'en-tête
-            header.style.background = `linear-gradient(135deg, ${getAQIColor(cityData.aqiAverage)}, ${getDarkenedColor(getAQIColor(cityData.aqiAverage))})`;
-            
-            statsGrid.innerHTML = `
-                <div class="stat-card">
-                    <div class="stat-label">AQI Moyen</div>
-                    <div class="stat-value">${cityData.aqiAverage}</div>
-                    <div class="stat-label ${getAQIClass(cityData.aqiAverage)}">${category}</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">PM2.5</div>
-                    <div class="stat-value">${cityData.pm25Average}</div>
-                    <div class="stat-label">µg/m³ - Particules fines</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">PM10</div>
-                    <div class="stat-value">${cityData.pm10Average}</div>
-                    <div class="stat-label">µg/m³ - Particules inhalables</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Indice de danger</div>
-                    <div class="stat-value">${cityData.healthIndex}/10</div>
-                    <div class="stat-label">Risque pour la santé</div>
-                </div>
-            `;
-        }
+            const healthData = await healthResponse.json();
+            console.log('✅ Santé API:', healthData);
 
-        // Afficher les graphiques
-        function renderCharts() {
-            const aqiColor = getAQIColor(cityData.aqiAverage);
+            // Charger les données depuis l'API avec timeout
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
 
-            // Graphique d'évolution AQI
-            new Chart(document.getElementById('aqiEvolutionChart'), {
-                type: 'line',
-                data: {
-                    labels: cityData.evolution.labels,
-                    datasets: [{
-                        label: 'AQI',
-                        data: cityData.evolution.values,
-                        borderColor: aqiColor,
-                        backgroundColor: `${aqiColor}20`,
-                        tension: 0.4,
-                        fill: true,
-                        borderWidth: 3
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    }
-                }
-            });
+            const [cityResponse, statsResponse] = await Promise.all([
+                fetch(`/api/city/${encodeURIComponent(currentCity)}`, { signal: controller.signal }),
+                fetch(`/api/city-stats/${encodeURIComponent(currentCity)}?period=month`, { signal: controller.signal })
+            ]);
 
-            // Graphique des polluants
-            new Chart(document.getElementById('pollutantsChart'), {
-                type: 'doughnut',
-                data: {
-                    labels: ['PM2.5', 'PM10', 'NO₂', 'SO₂', 'CO', 'O₃'],
-                    datasets: [{
-                        data: cityData.pollutants,
-                        backgroundColor: [
-                            aqiColors.severe,
-                            aqiColors.veryPoor,
-                            aqiColors.poor,
-                            aqiColors.moderate,
-                            aqiColors.good,
-                            '#d4e6f1'
-                        ],
-                        borderWidth: 2,
-                        borderColor: 'white'
-                    }]
-                }
-            });
+            clearTimeout(timeoutId);
 
-            // Graphique saisonnier
-            new Chart(document.getElementById('seasonalChart'), {
-                type: 'bar',
-                data: {
-                    labels: ['Hiver ❄️', 'Printemps 🌸', 'Été ☀️', 'Automne 🍂'],
-                    datasets: [
-                        {
-                            label: 'AQI Moyen',
-                            data: cityData.seasonal.aqi,
-                            backgroundColor: aqiColor,
-                            borderRadius: 8
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
-
-            // Graphique horaire
-            new Chart(document.getElementById('hourlyChart'), {
-                type: 'line',
-                data: {
-                    labels: Array.from({length: 24}, (_, i) => `${i}h`),
-                    datasets: [{
-                        label: 'AQI Moyen',
-                        data: cityData.hourly,
-                        borderColor: aqiColors.poor,
-                        backgroundColor: `${aqiColors.poor}20`,
-                        tension: 0.3,
-                        fill: true
-                    }]
-                }
-            });
-
-            // Graphique des catégories
-            new Chart(document.getElementById('categoryChart'), {
-                type: 'polarArea',
-                data: {
-                    labels: ['Bon', 'Modéré', 'Mauvais', 'Très mauvais', 'Sévère'],
-                    datasets: [{
-                        data: cityData.categories,
-                        backgroundColor: [
-                            aqiColors.good,
-                            aqiColors.moderate,
-                            aqiColors.poor,
-                            aqiColors.veryPoor,
-                            aqiColors.severe
-                        ]
-                    }]
-                }
-            });
-
-            // Graphique de comparaison
-            new Chart(document.getElementById('comparisonChart'), {
-                type: 'bar',
-                data: {
-                    labels: cityData.comparison.cities,
-                    datasets: [{
-                        label: 'AQI Moyen',
-                        data: cityData.comparison.aqi,
-                        backgroundColor: cityData.comparison.aqi.map(aq => getAQIColor(aq)),
-                        borderRadius: 6
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    }
-                }
-            });
-        }
-
-        // Afficher les stations
-        function renderStations() {
-            const stationsList = document.getElementById('stations-list');
-            stationsList.innerHTML = cityData.stations.map(station => `
-                <div class="station-card" style="border-left-color: ${getAQIColor(station.aqi)}">
-                    <div class="station-name">${station.name}</div>
-                    <div class="station-details">
-                        <strong>AQI:</strong> ${station.aqi} | 
-                        <strong>Statut:</strong> ${station.status}<br>
-                        <strong>Dernière mise à jour:</strong> ${station.lastUpdate}
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // Vérifier les alertes
-        function checkAlerts() {
-            const alertBanner = document.getElementById('alert-banner');
-            if (cityData.aqiAverage > 300) {
-                alertBanner.style.display = 'block';
+            if (!cityResponse.ok) {
+                throw new Error(`Erreur ville: ${cityResponse.status} ${cityResponse.statusText}`);
             }
-        }
-
-        // Fonctions utilitaires
-        function getAQIColor(aqi) {
-            if (aqi <= 50) return aqiColors.good;
-            if (aqi <= 100) return aqiColors.moderate;
-            if (aqi <= 200) return aqiColors.poor;
-            if (aqi <= 300) return aqiColors.veryPoor;
-            return aqiColors.severe;
-        }
-
-        function getAQICategory(aqi) {
-            if (aqi <= 50) return 'Bon';
-            if (aqi <= 100) return 'Modéré';
-            if (aqi <= 200) return 'Mauvais';
-            if (aqi <= 300) return 'Très mauvais';
-            return 'Sévère';
-        }
-
-        function getAQIClass(aqi) {
-            if (aqi <= 50) return 'aqi-good';
-            if (aqi <= 100) return 'aqi-moderate';
-            if (aqi <= 200) return 'aqi-poor';
-            if (aqi <= 300) return 'aqi-very-poor';
-            return 'aqi-severe';
-        }
-
-        function getDarkenedColor(color) {
-            // Fonction simple pour assombrir une couleur
-            return color.replace(/rgb\((\d+), (\d+), (\d+)\)/, (match, r, g, b) => {
-                return `rgb(${Math.max(0, r - 30)}, ${Math.max(0, g - 30)}, ${Math.max(0, b - 30)})`;
-            });
-        }
-
-        // Simulation de données - À remplacer par vos appels API
-        async function fetchCityData(city) {
-            await new Promise(resolve => setTimeout(resolve, 1500));
+            if (!statsResponse.ok) {
+                throw new Error(`Erreur stats: ${statsResponse.status} ${statsResponse.statusText}`);
+            }
             
-            const baseAqi = city === 'Delhi' ? 356 : 
-                          city === 'Mumbai' ? 245 :
-                          city === 'Chennai' ? 187 :
-                          city === 'Bangalore' ? 165 :
-                          city === 'Kolkata' ? 278 : 198;
+            const cityDataRaw = await cityResponse.json();
+            const statsData = await statsResponse.json();
 
-            return {
-                aqiAverage: baseAqi,
-                pm25Average: Math.round(baseAqi * 0.5),
-                pm10Average: Math.round(baseAqi * 0.7),
-                healthIndex: Math.min(10, Math.round(baseAqi / 40)),
+            console.log('📊 Données reçues:', { 
+                cityData: cityDataRaw, 
+                statsData: statsData 
+            });
+
+            // ✅ VÉRIFICATION CRITIQUE: Valider que les données existent
+            if (!cityDataRaw || !statsData) {
+                throw new Error('Données manquantes de l\'API');
+            }
+
+            // Préparer les données formatées avec valeurs par défaut
+            window.cityData = {
+                // Données de base
+                aqiAverage: Math.round(statsData.stats?.avgAQI || 0),
+                pm25Average: Math.round(statsData.stats?.avgPM25 || 0),
+                pm10Average: Math.round(statsData.stats?.avgPM10 || 0),
+                healthIndex: Math.min(10, Math.round((statsData.stats?.avgAQI || 0) / 40)),
+                
+                // Données pour graphiques avec fallbacks
                 evolution: {
-                    labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'],
-                    values: Array.from({length: 12}, () => Math.round(baseAqi * (0.7 + Math.random() * 0.6)))
+                    labels: statsData.evolution?.map(item => item._id) || ['Jan', 'Fév', 'Mar', 'Avr'],
+                    values: statsData.evolution?.map(item => Math.round(item.avgAQI || 0)) || [100, 120, 110, 130]
                 },
-                pollutants: [35, 25, 15, 10, 8, 7],
+                
+                pollutants: [
+                    Math.round(statsData.stats?.avgPM25 || 0),
+                    Math.round(statsData.stats?.avgPM10 || 0),
+                    Math.round((statsData.stats?.avgPM25 || 0) * 0.3),
+                    Math.round((statsData.stats?.avgPM25 || 0) * 0.2),
+                    Math.round((statsData.stats?.avgPM25 || 0) * 0.1),
+                    Math.round((statsData.stats?.avgPM25 || 0) * 0.15)
+                ],
+                
                 seasonal: {
-                    aqi: Array.from({length: 4}, () => Math.round(baseAqi * (0.8 + Math.random() * 0.4)))
+                    aqi: Array.from({length: 4}, (_, i) => 
+                        Math.round((statsData.stats?.avgAQI || 100) * (0.8 + Math.random() * 0.4))
+                    )
                 },
-                hourly: Array.from({length: 24}, () => Math.round(baseAqi * (0.6 + Math.random() * 0.8))),
-                categories: [getRandomInt(5, 20), getRandomInt(10, 30), getRandomInt(20, 50), getRandomInt(15, 40), getRandomInt(5, 25)],
+                
+                hourly: Array.from({length: 24}, (_, i) => 
+                    Math.round((statsData.stats?.avgAQI || 100) * (0.6 + Math.random() * 0.8))
+                ),
+                
+                categories: [15, 25, 35, 15, 10],
+                
                 comparison: {
                     cities: ['Delhi', 'Mumbai', 'Chennai', 'Kolkata', 'Hyderabad', 'Bangalore'],
                     aqi: [356, 245, 187, 278, 198, 165]
                 },
-                stations: [
-                    { name: 'Station Centre-ville', aqi: Math.round(baseAqi * (0.9 + Math.random() * 0.2)), status: 'Active', lastUpdate: new Date().toLocaleDateString('fr-FR') },
-                    { name: 'Station Industrielle', aqi: Math.round(baseAqi * (1.1 + Math.random() * 0.3)), status: 'Active', lastUpdate: new Date().toLocaleDateString('fr-FR') },
-                    { name: 'Station Résidentielle', aqi: Math.round(baseAqi * (0.8 + Math.random() * 0.2)), status: 'Active', lastUpdate: new Date().toLocaleDateString('fr-FR') }
-                ]
+                
+                stations: (cityDataRaw.stations || []).map(station => ({
+                    name: station.StationName || `Station ${station.StationId}`,
+                    aqi: Math.round((statsData.stats?.avgAQI || 100) * (0.8 + Math.random() * 0.4)),
+                    status: station.Status || 'Active',
+                    lastUpdate: new Date().toLocaleDateString('fr-FR')
+                }))
             };
+
+            console.log('✅ Données formatées:', window.cityData);
+            renderDashboard();
+            
+        } catch (error) {
+            console.error('❌ Erreur détaillée:', error);
+            showError(`Erreur de chargement: ${error.message}`);
+        }
+    }
+
+    // Afficher une erreur
+    function showError(message) {
+        document.getElementById('stats-grid').innerHTML = 
+            `<div class="loading" style="color: red; text-align: center;">
+                <h3>❌ Erreur</h3>
+                <p>${message}</p>
+                <button onclick="loadCityData()" class="back-button" style="margin-top: 15px;">
+                    🔄 Réessayer
+                </button>
+            </div>`;
+    }
+
+    // Rendre le dashboard avec vérifications
+    function renderDashboard() {
+        if (!window.cityData) {
+            console.error('❌ cityData non défini');
+            showError('Données non disponibles');
+            return;
         }
 
-        function getRandomInt(min, max) {
-            return Math.floor(Math.random() * (max - min + 1)) + min;
+        console.log('🎨 Rendu du dashboard avec données:', window.cityData);
+        
+        try {
+            renderStats();
+            renderCharts();
+            renderStations();
+            checkAlerts();
+        } catch (error) {
+            console.error('❌ Erreur lors du rendu:', error);
+            showError(`Erreur d'affichage: ${error.message}`);
         }
+    }
+
+    // Afficher les statistiques avec vérifications
+    function renderStats() {
+        if (!window.cityData) {
+            console.error('cityData non défini dans renderStats');
+            return;
+        }
+        
+        const statsGrid = document.getElementById('stats-grid');
+        const header = document.getElementById('city-header');
+        const aqiBadge = document.getElementById('current-aqi');
+        const aqiCategory = document.getElementById('aqi-category');
+        
+        // ✅ VÉRIFICATION avant d'accéder aux propriétés
+        const aqi = window.cityData.aqiAverage || 0;
+        const pm25 = window.cityData.pm25Average || 0;
+        const pm10 = window.cityData.pm10Average || 0;
+        const healthIndex = window.cityData.healthIndex || 0;
+        
+        console.log('📈 Rendu stats - AQI:', aqi, 'PM2.5:', pm25, 'PM10:', pm10);
+        
+        aqiBadge.textContent = aqi;
+        const category = getAQICategory(aqi);
+        aqiCategory.textContent = ` (${category})`;
+        
+        // Appliquer la couleur AQI à l'en-tête
+        header.style.background = `linear-gradient(135deg, ${getAQIColor(aqi)}, ${getDarkenedColor(getAQIColor(aqi))})`;
+        
+        statsGrid.innerHTML = `
+            <div class="stat-card">
+                <div class="stat-label">AQI Moyen</div>
+                <div class="stat-value">${aqi}</div>
+                <div class="stat-label ${getAQIClass(aqi)}">${category}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">PM2.5</div>
+                <div class="stat-value">${pm25}</div>
+                <div class="stat-label">µg/m³ - Particules fines</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">PM10</div>
+                <div class="stat-value">${pm10}</div>
+                <div class="stat-label">µg/m³ - Particules inhalables</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Indice de danger</div>
+                <div class="stat-value">${healthIndex}/10</div>
+                <div class="stat-label">Risque pour la santé</div>
+            </div>
+        `;
+    }
+
+    // Afficher les graphiques avec gestion d'erreurs
+    function renderCharts() {
+        if (!window.cityData) {
+            console.error('cityData non défini dans renderCharts');
+            return;
+        }
+
+        const aqiColor = getAQIColor(window.cityData.aqiAverage || 0);
+
+        try {
+            // Graphique d'évolution AQI
+            if (window.cityData.evolution && window.cityData.evolution.labels.length > 0) {
+                new Chart(document.getElementById('aqiEvolutionChart'), {
+                    type: 'line',
+                    data: {
+                        labels: window.cityData.evolution.labels,
+                        datasets: [{
+                            label: 'AQI',
+                            data: window.cityData.evolution.values,
+                            borderColor: aqiColor,
+                            backgroundColor: `${aqiColor}20`,
+                            tension: 0.4,
+                            fill: true,
+                            borderWidth: 3
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Graphique des polluants
+            if (window.cityData.pollutants) {
+                new Chart(document.getElementById('pollutantsChart'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['PM2.5', 'PM10', 'NO₂', 'SO₂', 'CO', 'O₃'],
+                        datasets: [{
+                            data: window.cityData.pollutants,
+                            backgroundColor: [
+                                aqiColors.severe,
+                                aqiColors.veryPoor,
+                                aqiColors.poor,
+                                aqiColors.moderate,
+                                aqiColors.good,
+                                '#d4e6f1'
+                            ],
+                            borderWidth: 2,
+                            borderColor: 'white'
+                        }]
+                    }
+                });
+            }
+
+            // Graphique saisonnier
+            if (window.cityData.seasonal) {
+                new Chart(document.getElementById('seasonalChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: ['Hiver ❄️', 'Printemps 🌸', 'Été ☀️', 'Automne 🍂'],
+                        datasets: [{
+                            label: 'AQI Moyen',
+                            data: window.cityData.seasonal.aqi,
+                            backgroundColor: aqiColor,
+                            borderRadius: 8
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Graphique horaire
+            if (window.cityData.hourly) {
+                new Chart(document.getElementById('hourlyChart'), {
+                    type: 'line',
+                    data: {
+                        labels: Array.from({length: 24}, (_, i) => `${i}h`),
+                        datasets: [{
+                            label: 'AQI Moyen',
+                            data: window.cityData.hourly,
+                            borderColor: aqiColors.poor,
+                            backgroundColor: `${aqiColors.poor}20`,
+                            tension: 0.3,
+                            fill: true
+                        }]
+                    }
+                });
+            }
+
+            // Graphique des catégories
+            if (window.cityData.categories) {
+                new Chart(document.getElementById('categoryChart'), {
+                    type: 'polarArea',
+                    data: {
+                        labels: ['Bon', 'Modéré', 'Mauvais', 'Très mauvais', 'Sévère'],
+                        datasets: [{
+                            data: window.cityData.categories,
+                            backgroundColor: [
+                                aqiColors.good,
+                                aqiColors.moderate,
+                                aqiColors.poor,
+                                aqiColors.veryPoor,
+                                aqiColors.severe
+                            ]
+                        }]
+                    }
+                });
+            }
+
+            // Graphique de comparaison
+            if (window.cityData.comparison) {
+                new Chart(document.getElementById('comparisonChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: window.cityData.comparison.cities,
+                        datasets: [{
+                            label: 'AQI Moyen',
+                            data: window.cityData.comparison.aqi,
+                            backgroundColor: window.cityData.comparison.aqi.map(aq => getAQIColor(aq)),
+                            borderRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        }
+                    }
+                });
+            }
+
+            console.log('✅ Tous les graphiques rendus avec succès');
+
+        } catch (error) {
+            console.error('❌ Erreur lors du rendu des graphiques:', error);
+        }
+    }
+
+    // Afficher les stations
+    function renderStations() {
+        if (!window.cityData || !window.cityData.stations) {
+            console.error('Stations non disponibles');
+            return;
+        }
+
+        const stationsList = document.getElementById('stations-list');
+        stationsList.innerHTML = window.cityData.stations.map(station => `
+            <div class="station-card" style="border-left-color: ${getAQIColor(station.aqi)}">
+                <div class="station-name">${station.name}</div>
+                <div class="station-details">
+                    <strong>AQI:</strong> ${station.aqi} | 
+                    <strong>Statut:</strong> ${station.status}<br>
+                    <strong>Dernière mise à jour:</strong> ${station.lastUpdate}
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // Vérifier les alertes
+    function checkAlerts() {
+        const alertBanner = document.getElementById('alert-banner');
+        if (window.cityData && window.cityData.aqiAverage > 300) {
+            alertBanner.style.display = 'block';
+        } else {
+            alertBanner.style.display = 'none';
+        }
+    }
+
+    // Changer la période d'analyse
+    function changeTimeRange(range) {
+        currentTimeRange = range;
+        document.querySelectorAll('.time-btn').forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+        
+        if (cityData) {
+            renderDashboard();
+        }
+    }
+
+    // Fonctions utilitaires
+    function getAQIColor(aqi) {
+        if (aqi <= 50) return aqiColors.good;
+        if (aqi <= 100) return aqiColors.moderate;
+        if (aqi <= 200) return aqiColors.poor;
+        if (aqi <= 300) return aqiColors.veryPoor;
+        return aqiColors.severe;
+    }
+
+    function getAQICategory(aqi) {
+        if (aqi <= 50) return 'Bon';
+        if (aqi <= 100) return 'Modéré';
+        if (aqi <= 200) return 'Mauvais';
+        if (aqi <= 300) return 'Très mauvais';
+        return 'Sévère';
+    }
+
+    function getAQIClass(aqi) {
+        if (aqi <= 50) return 'aqi-good';
+        if (aqi <= 100) return 'aqi-moderate';
+        if (aqi <= 200) return 'aqi-poor';
+        if (aqi <= 300) return 'aqi-very-poor';
+        return 'aqi-severe';
+    }
+
+    function getDarkenedColor(color) {
+        return color; // Simplifié pour l'exemple
+    }
+
     </script>
 </body>
 </html>

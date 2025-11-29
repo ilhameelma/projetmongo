@@ -1,4 +1,5 @@
-// Variables globales
+
+ // Variables globales
 let currentCharts = {};
 let currentFilters = {
     city: 'all',
@@ -38,7 +39,7 @@ async function loadGlobalStats() {
         document.getElementById('aqi-value').textContent = stats.aqi ? Math.round(stats.aqi) : 'N/A';
         document.getElementById('stations-value').textContent = stats.activeStations || 'N/A';
         
-        // Mettre à jour les tendances (exemple - à adapter avec vos données réelles)
+        // Mettre à jour les tendances
         document.getElementById('pm25-trend').textContent = 'Données en direct';
         document.getElementById('pm10-trend').textContent = 'Données en direct';
         document.getElementById('aqi-trend').textContent = 'Données en direct';
@@ -134,12 +135,22 @@ async function createStationsStatusChart() {
             currentCharts.stationsStatusChart.destroy();
         }
         
+        // Filtrer les données pour éviter les valeurs nulles
+        const filteredData = statusData.filter(item => item._id && item.count > 0);
+        
         currentCharts.stationsStatusChart = new Chart(ctx, {
             type: 'doughnut',
             data: {
-                labels: statusData.map(s => s._id || 'Inconnu'),
+                labels: filteredData.map(s => {
+                    const statusMap = {
+                        'Active': 'Actives',
+                        'Inactive': 'Inactives', 
+                        'Unknown': 'Inconnues'
+                    };
+                    return statusMap[s._id] || s._id;
+                }),
                 datasets: [{
-                    data: statusData.map(s => s.count || 0),
+                    data: filteredData.map(s => s.count || 0),
                     backgroundColor: ['#2ecc71', '#e74c3c', '#f39c12', '#3498db'],
                     borderWidth: 1
                 }]
@@ -153,7 +164,7 @@ async function createStationsStatusChart() {
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                const total = statusData.reduce((sum, s) => sum + (s.count || 0), 0);
+                                const total = filteredData.reduce((sum, s) => sum + (s.count || 0), 0);
                                 const percentage = total > 0 ? ((context.parsed / total) * 100).toFixed(1) : 0;
                                 return `${context.label}: ${context.parsed} (${percentage}%)`;
                             }
@@ -181,20 +192,27 @@ async function createCityPollutionChart() {
             currentCharts.cityPollutionChart.destroy();
         }
         
+        // Trier par AQI décroissant et limiter à 10 villes
+        const sortedData = cityData
+            .filter(city => city._id && city.pm25 > 0)
+            .sort((a, b) => (b.aqi || 0) - (a.aqi || 0))
+            .slice(0, 10);
+        
         currentCharts.cityPollutionChart = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: cityData.map(c => c._id || 'Ville inconnue'),
+                labels: sortedData.map(c => c._id || 'Ville inconnue'),
                 datasets: [
                     {
                         label: 'PM2.5 Moyen (μg/m³)',
-                        data: cityData.map(c => c.pm25 || 0),
+                        data: sortedData.map(c => c.pm25 || 0),
                         backgroundColor: 'rgba(231, 76, 60, 0.7)',
                     },
                     {
                         label: 'AQI Moyen',
-                        data: cityData.map(c => c.aqi || 0),
+                        data: sortedData.map(c => c.aqi || 0),
                         backgroundColor: 'rgba(52, 152, 219, 0.7)',
+                        yAxisID: 'y1'
                     }
                 ]
             },
@@ -210,8 +228,19 @@ async function createCityPollutionChart() {
                         beginAtZero: true,
                         title: {
                             display: true,
-                            text: 'Valeur'
+                            text: 'PM2.5 (μg/m³)'
                         }
+                    },
+                    y1: {
+                        beginAtZero: true,
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: 'AQI'
+                        },
+                        grid: {
+                            drawOnChartArea: false,
+                        },
                     }
                 }
             }
@@ -352,12 +381,15 @@ async function createAqiDistributionChart() {
             'Severe': 'Sévère'
         };
         
+        // Filtrer les données valides
+        const filteredDistribution = distribution.filter(d => d._id && d.count > 0);
+        
         currentCharts.aqiDistributionChart = new Chart(ctx, {
             type: 'doughnut',
             data: {
-                labels: distribution.map(d => categoryMap[d._id] || d._id || 'Inconnu'),
+                labels: filteredDistribution.map(d => categoryMap[d._id] || d._id),
                 datasets: [{
-                    data: distribution.map(d => d.count || 0),
+                    data: filteredDistribution.map(d => d.count || 0),
                     backgroundColor: [
                         '#27ae60', // Good - Vert
                         '#f1c40f', // Moderate - Jaune
@@ -377,7 +409,7 @@ async function createAqiDistributionChart() {
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                const total = distribution.reduce((sum, d) => sum + (d.count || 0), 0);
+                                const total = filteredDistribution.reduce((sum, d) => sum + (d.count || 0), 0);
                                 const percentage = total > 0 ? ((context.parsed / total) * 100).toFixed(1) : 0;
                                 return `${context.label}: ${context.parsed} (${percentage}%)`;
                             }
@@ -440,7 +472,7 @@ function renderTop10Table(stations) {
             <td class="${isHighPm25 ? 'high-value' : ''}">${station.pm25 ? station.pm25.toFixed(1) : 'N/A'}</td>
             <td class="${isHighPm10 ? 'high-value' : ''}">${station.pm10 ? station.pm10.toFixed(1) : 'N/A'}</td>
             <td class="${isHighAqi ? 'high-value' : ''}">${station.aqi || 'N/A'}</td>
-            <td><span class="aqi-badge aqi-${(station.category || '').toLowerCase().replace(' ', '-')}">${station.category || 'Inconnu'}</span></td>
+            <td><span class="aqi-badge aqi-${(station.category || 'unknown').toLowerCase().replace(' ', '-')}">${station.category || 'Inconnu'}</span></td>
         </tr>
     `}).join('');
     

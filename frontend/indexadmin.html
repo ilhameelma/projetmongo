@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Air Quality Data Admin</title>
+    <link rel="stylesheet" href="css/styleadmin.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-wind"></i> Air Quality Data Administration</h1>
+            <p>Managing sharded MongoDB cluster for air quality monitoring</p>
+        </header>
+
+        <div class="dashboard">
+            <div class="stats-container">
+                <h2>Database Statistics</h2>
+                <div id="stats" class="stats-grid"></div>
+            </div>
+
+            <div class="tabs">
+                <button class="tab-button active" onclick="openTab('stations')">Stations</button>
+                <button class="tab-button" onclick="openTab('air-quality')">Air Quality</button>
+                <button class="tab-button" onclick="openTab('performance')">Performance Tests</button>
+            </div>
+
+            <!-- Stations Tab -->
+            <div id="stations" class="tab-content active">
+                <div class="toolbar">
+                    <input type="text" id="stationSearch" placeholder="Search stations..." onkeyup="searchStations()">
+                    <button class="btn-primary" onclick="showAddStationForm()">
+                        <i class="fas fa-plus"></i> Add Station
+                    </button>
+                </div>
+                <div id="stationsTable" class="table-container"></div>
+                <div id="stationsPagination" class="pagination"></div>
+            </div>
+
+            <!-- Air Quality Tab -->
+            <div id="air-quality" class="tab-content">
+                <div class="toolbar">
+                    <select id="cityFilter" onchange="filterAirQuality()">
+                        <option value="">All Cities</option>
+                    </select>
+                    <input type="date" id="dateFilter" onchange="filterAirQuality()">
+                    <button class="btn-secondary" onclick="loadAirQualityData()">
+                        <i class="fas fa-sync"></i> Refresh
+                    </button>
+                </div>
+                <div id="airQualityTable" class="table-container"></div>
+                <div id="airQualityPagination" class="pagination"></div>
+            </div>
+
+            <!-- Performance Tests Tab -->
+            <div id="performance" class="tab-content">
+                <div class="performance-tests">
+                    <div class="test-card">
+                        <h3>City Data Query Test</h3>
+                        <select id="testCity">
+                            <option value="">Select City</option>
+                        </select>
+                        <button class="btn-primary" onclick="runCityPerformanceTest()">
+                            Run Test
+                        </button>
+                        <div id="cityTestResults" class="test-results"></div>
+                    </div>
+                    
+                    <div class="test-card">
+                        <h3>Station Data Query Test</h3>
+                        <select id="testStation">
+                            <option value="">Select Station</option>
+                        </select>
+                        <button class="btn-primary" onclick="runStationPerformanceTest()">
+                            Run Test
+                        </button>
+                        <div id="stationTestResults" class="test-results"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="stationModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('stationModal')">&times;</span>
+            <h3 id="modalTitle">Add New Station</h3>
+            <form id="stationForm">
+                <input type="hidden" id="stationId">
+                <div class="form-group">
+                    <label for="StationId">Station ID:</label>
+                    <input type="text" id="StationId" required>
+                </div>
+                <div class="form-group">
+                    <label for="City">City:</label>
+                    <input type="text" id="City" required>
+                </div>
+                <div class="form-group">
+                    <label for="Latitude">Latitude:</label>
+                    <input type="number" id="Latitude" step="any" required>
+                </div>
+                <div class="form-group">
+                    <label for="Longitude">Longitude:</label>
+                    <input type="number" id="Longitude" step="any" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" onclick="closeModal('stationModal')">Cancel</button>
+                    <button type="submit">Save Station</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/appadmin.js"></script>
+</body>
+</html>
