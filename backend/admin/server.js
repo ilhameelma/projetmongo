@@ -31,7 +31,15 @@ app.get('/', (req, res) => {
 app.get('/admin', (req, res) => {
     res.sendFile(path.join(__dirname, '../../frontend', 'indexadmin.html'));
 });
-
+// Route de diagnostic
+app.get('/debug', (req, res) => {
+    res.json({
+        frontendPath: frontendPath,
+        cssExists: require('fs').existsSync(path.join(frontendPath, 'css/styleadmin.css')),
+        jsExists: require('fs').existsSync(path.join(frontendPath, 'js/appadmin.js')),
+        adminHtmlExists: require('fs').existsSync(path.join(frontendPath, 'indexadmin.html'))
+    });
+});
 // Initialize database connection and start server
 async function startServer() {
     try {

@@ -382,11 +382,12 @@
                 <img src="/img.png" alt="Logo Qualité Air Inde" class="header-logo">
                 <h1 style="color: #6ecec0;">Surveillance Qualité Air - Inde</h1>
             </div>
-            <nav class="nav">
-                <a href="#" class="active">Générale</a>
-                <a href="test.html">Statistique</a>
-                <a href="#">Qualité Air</a>
-            </nav>
+<!-- ✅ NOUVEAU - Liens corrigés -->
+        <nav class="nav">
+            <a href="#" class="active">Générale</a>
+            <a href="/statistics">Statistique</a> <!-- Utilise la route Express -->
+            <a href="/city-detail">Qualité Air</a> <!-- Utilise la route Express -->
+        </nav>
             <button class="admin-btn" onclick="redirectToAdmin()">ADMIN</button>
         </header>
 
@@ -473,7 +474,7 @@
 <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 <script>
 function redirectToAdmin() {
-    window.location.href = "/admin";
+    window.location.href = "/admin"; // Cette route est correcte
 }
 
 

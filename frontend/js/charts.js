@@ -1,11 +1,11 @@
-
- // Variables globales
+// Variables globales
 let currentCharts = {};
 let currentFilters = {
     city: 'all',
     year: 'all', 
     season: 'all'
 };
+const API_BASE = '/api/stats';
 
 // Initialisation des graphiques avec données réelles
 async function initializeCharts() {
@@ -30,7 +30,7 @@ async function initializeCharts() {
 // Charger les statistiques globales
 async function loadGlobalStats() {
     try {
-        const response = await fetch('/api/stats/global');
+        const response = await fetch(`${API_BASE}/global`);
         if (!response.ok) throw new Error('Erreur API: ' + response.status);
         const stats = await response.json();
         
@@ -38,12 +38,6 @@ async function loadGlobalStats() {
         document.getElementById('pm10-value').textContent = `${stats.pm10 ? stats.pm10.toFixed(1) : 'N/A'} μg/m³`;
         document.getElementById('aqi-value').textContent = stats.aqi ? Math.round(stats.aqi) : 'N/A';
         document.getElementById('stations-value').textContent = stats.activeStations || 'N/A';
-        
-        // Mettre à jour les tendances
-        document.getElementById('pm25-trend').textContent = 'Données en direct';
-        document.getElementById('pm10-trend').textContent = 'Données en direct';
-        document.getElementById('aqi-trend').textContent = 'Données en direct';
-        document.getElementById('stations-trend').textContent = 'Réseau actif';
         
     } catch (error) {
         console.error('Erreur chargement stats globales:', error);
@@ -54,7 +48,7 @@ async function loadGlobalStats() {
 // Graphique d'évolution de la pollution
 async function createPollutionChart() {
     try {
-        const response = await fetch('/api/stats/trends');
+        const response = await fetch(`${API_BASE}/trends`);
         if (!response.ok) throw new Error('Erreur API trends');
         const trends = await response.json();
         
@@ -86,15 +80,6 @@ async function createPollutionChart() {
                         tension: 0.3,
                         fill: true,
                         borderWidth: 3
-                    },
-                    {
-                        label: 'AQI',
-                        data: trends.map(t => t.aqi || 0),
-                        borderColor: '#3498db',
-                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
-                        tension: 0.3,
-                        fill: false,
-                        borderWidth: 2
                     }
                 ]
             },
@@ -103,15 +88,6 @@ async function createPollutionChart() {
                 plugins: {
                     legend: {
                         position: 'top',
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: false,
-                        title: {
-                            display: true,
-                            text: 'Valeur'
-                        }
                     }
                 }
             }
@@ -125,7 +101,7 @@ async function createPollutionChart() {
 // Graphique statut des stations
 async function createStationsStatusChart() {
     try {
-        const response = await fetch('/api/stations/status');
+        const response = await fetch(`${API_BASE}/stations/status`);
         if (!response.ok) throw new Error('Erreur API status');
         const statusData = await response.json();
         
@@ -135,7 +111,6 @@ async function createStationsStatusChart() {
             currentCharts.stationsStatusChart.destroy();
         }
         
-        // Filtrer les données pour éviter les valeurs nulles
         const filteredData = statusData.filter(item => item._id && item.count > 0);
         
         currentCharts.stationsStatusChart = new Chart(ctx, {
@@ -160,15 +135,6 @@ async function createStationsStatusChart() {
                 plugins: {
                     legend: {
                         position: 'right',
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const total = filteredData.reduce((sum, s) => sum + (s.count || 0), 0);
-                                const percentage = total > 0 ? ((context.parsed / total) * 100).toFixed(1) : 0;
-                                return `${context.label}: ${context.parsed} (${percentage}%)`;
-                            }
-                        }
                     }
                 }
             }
@@ -182,7 +148,7 @@ async function createStationsStatusChart() {
 // Graphique pollution par ville
 async function createCityPollutionChart() {
     try {
-        const response = await fetch('/api/search?city=all&year=all');
+        const response = await fetch(`${API_BASE}/search?city=all`);
         if (!response.ok) throw new Error('Erreur API cities');
         const cityData = await response.json();
         
@@ -192,7 +158,6 @@ async function createCityPollutionChart() {
             currentCharts.cityPollutionChart.destroy();
         }
         
-        // Trier par AQI décroissant et limiter à 10 villes
         const sortedData = cityData
             .filter(city => city._id && city.pm25 > 0)
             .sort((a, b) => (b.aqi || 0) - (a.aqi || 0))
@@ -207,12 +172,6 @@ async function createCityPollutionChart() {
                         label: 'PM2.5 Moyen (μg/m³)',
                         data: sortedData.map(c => c.pm25 || 0),
                         backgroundColor: 'rgba(231, 76, 60, 0.7)',
-                    },
-                    {
-                        label: 'AQI Moyen',
-                        data: sortedData.map(c => c.aqi || 0),
-                        backgroundColor: 'rgba(52, 152, 219, 0.7)',
-                        yAxisID: 'y1'
                     }
                 ]
             },
@@ -221,26 +180,6 @@ async function createCityPollutionChart() {
                 plugins: {
                     legend: {
                         position: 'top',
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'PM2.5 (μg/m³)'
-                        }
-                    },
-                    y1: {
-                        beginAtZero: true,
-                        position: 'right',
-                        title: {
-                            display: true,
-                            text: 'AQI'
-                        },
-                        grid: {
-                            drawOnChartArea: false,
-                        },
                     }
                 }
             }
@@ -254,7 +193,7 @@ async function createCityPollutionChart() {
 // Graphique stations par ville
 async function createStationsByCityChart() {
     try {
-        const response = await fetch('/api/stations/by-city');
+        const response = await fetch(`${API_BASE}/stations/by-city`);
         if (!response.ok) throw new Error('Erreur API stations by city');
         const stationsData = await response.json();
         
@@ -271,10 +210,7 @@ async function createStationsByCityChart() {
                 datasets: [{
                     label: 'Nombre de stations',
                     data: stationsData.map(s => s.count || 0),
-                    backgroundColor: [
-                        '#e74c3c', '#e67e22', '#f39c12', '#f1c40f', '#2ecc71', 
-                        '#1abc9c', '#3498db', '#9b59b6', '#34495e', '#95a5a6'
-                    ],
+                    backgroundColor: '#3498db',
                     borderWidth: 0
                 }]
             },
@@ -283,15 +219,6 @@ async function createStationsByCityChart() {
                 plugins: {
                     legend: {
                         display: false
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Nombre de stations'
-                        }
                     }
                 }
             }
@@ -305,7 +232,7 @@ async function createStationsByCityChart() {
 // Graphique saisonnier
 async function createSeasonalChart() {
     try {
-        const response = await fetch('/api/stats/seasonal');
+        const response = await fetch(`${API_BASE}/seasonal`);
         if (!response.ok) throw new Error('Erreur API seasonal');
         const seasonalData = await response.json();
         
@@ -315,22 +242,15 @@ async function createSeasonalChart() {
             currentCharts.seasonalChart.destroy();
         }
         
-        const seasons = ['Hiver', 'Printemps', 'Été', 'Automne'];
-        
         currentCharts.seasonalChart = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: seasons,
+                labels: seasonalData.map(s => s.season),
                 datasets: [
                     {
                         label: 'PM2.5 (μg/m³)',
                         data: seasonalData.map(s => s.pm25 || 0),
                         backgroundColor: 'rgba(231, 76, 60, 0.7)',
-                    },
-                    {
-                        label: 'AQI',
-                        data: seasonalData.map(s => s.aqi || 0),
-                        backgroundColor: 'rgba(52, 152, 219, 0.7)',
                     }
                 ]
             },
@@ -339,15 +259,6 @@ async function createSeasonalChart() {
                 plugins: {
                     legend: {
                         position: 'top',
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Valeur'
-                        }
                     }
                 }
             }
@@ -361,7 +272,7 @@ async function createSeasonalChart() {
 // Graphique distribution AQI
 async function createAqiDistributionChart() {
     try {
-        const response = await fetch('/api/stats/aqi-distribution');
+        const response = await fetch(`${API_BASE}/aqi-distribution`);
         if (!response.ok) throw new Error('Erreur API AQI distribution');
         const distribution = await response.json();
         
@@ -371,32 +282,15 @@ async function createAqiDistributionChart() {
             currentCharts.aqiDistributionChart.destroy();
         }
         
-        // Mapper les catégories AQI
-        const categoryMap = {
-            'Good': 'Bon',
-            'Satisfactory': 'Satisfaisant', 
-            'Moderate': 'Modéré',
-            'Poor': 'Mauvais',
-            'Very Poor': 'Très Mauvais',
-            'Severe': 'Sévère'
-        };
-        
-        // Filtrer les données valides
         const filteredDistribution = distribution.filter(d => d._id && d.count > 0);
         
         currentCharts.aqiDistributionChart = new Chart(ctx, {
             type: 'doughnut',
             data: {
-                labels: filteredDistribution.map(d => categoryMap[d._id] || d._id),
+                labels: filteredDistribution.map(d => d._id),
                 datasets: [{
                     data: filteredDistribution.map(d => d.count || 0),
-                    backgroundColor: [
-                        '#27ae60', // Good - Vert
-                        '#f1c40f', // Moderate - Jaune
-                        '#e67e22', // Poor - Orange
-                        '#e74c3c', // Very Poor - Rouge
-                        '#c0392b'  // Severe - Rouge foncé
-                    ],
+                    backgroundColor: ['#27ae60', '#f1c40f', '#e67e22', '#e74c3c', '#c0392b'],
                     borderWidth: 1
                 }]
             },
@@ -405,15 +299,6 @@ async function createAqiDistributionChart() {
                 plugins: {
                     legend: {
                         position: 'right',
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const total = filteredDistribution.reduce((sum, d) => sum + (d.count || 0), 0);
-                                const percentage = total > 0 ? ((context.parsed / total) * 100).toFixed(1) : 0;
-                                return `${context.label}: ${context.parsed} (${percentage}%)`;
-                            }
-                        }
                     }
                 }
             }
@@ -427,7 +312,7 @@ async function createAqiDistributionChart() {
 // Charger le tableau Top 10
 async function loadTopStationsTable() {
     try {
-        const response = await fetch('/api/stations/top-polluted');
+        const response = await fetch(`${API_BASE}/stations/top-polluted`);
         if (!response.ok) throw new Error('Erreur API top stations');
         const topStations = await response.json();
         
@@ -453,63 +338,98 @@ function renderTop10Table(stations) {
         tbody.innerHTML = `
             <tr>
                 <td colspan="6" style="text-align: center; padding: 40px;">
-                    Aucune donnée disponible
+                    <i class="fas fa-info-circle" style="color: #3498db; font-size: 2em; margin-bottom: 10px;"></i>
+                    <p>Aucune donnée de station disponible</p>
+                    <small>Vérifiez que votre base de données contient des données de stations</small>
                 </td>
             </tr>
         `;
         return;
     }
     
+    console.log('📊 Stations à afficher:', stations);
+    
     tbody.innerHTML = stations.map((station, index) => {
-        const isHighPm25 = station.pm25 > 150;
-        const isHighPm10 = station.pm10 > 250;
-        const isHighAqi = station.aqi > 300;
+        // Couleurs pour les catégories AQI
+        const categoryColors = {
+            'Good': '#27ae60',
+            'Satisfactory': '#2ecc71', 
+            'Moderate': '#f1c40f',
+            'Poor': '#e67e22',
+            'Very Poor': '#e74c3c',
+            'Severe': '#c0392b',
+            'Inconnu': '#95a5a6'
+        };
+        
+        const categoryColor = categoryColors[station.category] || '#95a5a6';
+        const isHighPollution = station.pm25 > 100 || station.aqi > 200;
         
         return `
-        <tr>
-            <td><strong>${station.station || 'N/A'}</strong></td>
+        <tr style="${isHighPollution ? 'background-color: #fff5f5;' : ''}">
+            <td><strong>${station.station || `Station_${index + 1}`}</strong></td>
             <td>${station.city || 'Ville inconnue'}</td>
-            <td class="${isHighPm25 ? 'high-value' : ''}">${station.pm25 ? station.pm25.toFixed(1) : 'N/A'}</td>
-            <td class="${isHighPm10 ? 'high-value' : ''}">${station.pm10 ? station.pm10.toFixed(1) : 'N/A'}</td>
-            <td class="${isHighAqi ? 'high-value' : ''}">${station.aqi || 'N/A'}</td>
-            <td><span class="aqi-badge aqi-${(station.category || 'unknown').toLowerCase().replace(' ', '-')}">${station.category || 'Inconnu'}</span></td>
+            <td style="font-weight: bold; color: ${station.pm25 > 100 ? '#e74c3c' : '#2c3e50'}">
+                ${station.pm25 ? station.pm25.toFixed(1) : 'N/A'}
+            </td>
+            <td style="font-weight: bold; color: ${station.pm10 > 200 ? '#e74c3c' : '#2c3e50'}">
+                ${station.pm10 ? station.pm10.toFixed(1) : 'N/A'}
+            </td>
+            <td style="font-weight: bold; color: ${station.aqi > 200 ? '#e74c3c' : '#2c3e50'}">
+                ${station.aqi || 'N/A'}
+            </td>
+            <td>
+                <span class="aqi-badge" style="background-color: ${categoryColor}">
+                    ${station.category || 'Inconnu'}
+                </span>
+            </td>
         </tr>
-    `}).join('');
+        `;
+    }).join('');
     
-    updateTableStats(stations);
+    // Ajouter des statistiques résumées
+    addTableSummary(stations);
 }
 
-function updateTableStats(stations) {
+function addTableSummary(stations) {
     let statsElement = document.querySelector('.table-stats');
     
     if (!statsElement) {
         statsElement = document.createElement('div');
         statsElement.className = 'table-stats';
-        const table = document.querySelector('.data-table table');
-        table.parentNode.insertBefore(statsElement, table.nextSibling);
+        const table = document.querySelector('.data-table');
+        table.appendChild(statsElement);
     }
     
-    if (!stations || stations.length === 0) {
+    if (stations.length === 0) {
         statsElement.innerHTML = '';
         return;
     }
     
-    const severeCount = stations.filter(s => s.category === 'Severe').length;
-    const veryPoorCount = stations.filter(s => s.category === 'Very Poor').length;
-    const delhiCount = stations.filter(s => s.city === 'Delhi').length;
     const avgPM25 = stations.reduce((sum, s) => sum + (s.pm25 || 0), 0) / stations.length;
+    const avgPM10 = stations.reduce((sum, s) => sum + (s.pm10 || 0), 0) / stations.length;
     const avgAQI = stations.reduce((sum, s) => sum + (s.aqi || 0), 0) / stations.length;
     
+    const severeCount = stations.filter(s => s.category === 'Severe').length;
+    const veryPoorCount = stations.filter(s => s.category === 'Very Poor').length;
+    const poorCount = stations.filter(s => s.category === 'Poor').length;
+    
     statsElement.innerHTML = `
-        <div style="margin-top: 20px; padding: 15px; background: linear-gradient(135deg, #f8f9fa, #e9ecef); border-radius: 10px; border-left: 4px solid var(--accent);">
-            <strong>Analyse du Top 10 :</strong>
-            <ul style="margin: 10px 0 0 0; padding-left: 20px;">
-                <li>${severeCount} stations en catégorie "Severe"</li>
-                <li>${veryPoorCount} stations en catégorie "Very Poor"</li>
-                <li>${delhiCount} stations à Delhi dans le Top 10</li>
-                <li>PM2.5 moyen: ${avgPM25.toFixed(1)} μg/m³</li>
-                <li>AQI moyen: ${Math.round(avgAQI)}</li>
-            </ul>
+        <div style="margin-top: 20px; padding: 15px; background: linear-gradient(135deg, #f8f9fa, #e9ecef); border-radius: 10px; border-left: 4px solid #e74c3c;">
+            <strong>📈 Analyse du Top 10 :</strong>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-top: 10px;">
+                <div>
+                    <strong>Moyennes :</strong>
+                    <div>PM2.5: ${avgPM25.toFixed(1)} μg/m³</div>
+                    <div>PM10: ${avgPM10.toFixed(1)} μg/m³</div>
+                    <div>AQI: ${Math.round(avgAQI)}</div>
+                </div>
+                <div>
+                    <strong>Catégories :</strong>
+                    <div>🔴 Sévère: ${severeCount}</div>
+                    <div>🟠 Très mauvais: ${veryPoorCount}</div>
+                    <div>🟡 Mauvais: ${poorCount}</div>
+                </div>
+            </div>
         </div>
     `;
 }
@@ -547,9 +467,9 @@ async function updateAPIStatus() {
         const statusElement = document.getElementById('apiStatus');
         const lastUpdateElement = document.getElementById('lastUpdate');
         
-        if (data.status === 'OK') {
+        if (data.status === 'healthy') {
             statusElement.innerHTML = '<span style="color: #27ae60;">Connecté</span>';
-            statusElement.innerHTML += ` (${data.database})`;
+            statusElement.innerHTML += ` (${data.collections.city_hour} enregistrements)`;
         } else {
             statusElement.innerHTML = '<span style="color: #e74c3c;">Déconnecté</span>';
         }
@@ -576,9 +496,7 @@ function createFallbackChart(canvasId, type, title) {
         datasets: [{
             label: 'Données non disponibles',
             data: [1, 1, 1],
-            backgroundColor: '#95a5a6',
-            borderColor: '#7f8c8d',
-            borderWidth: 1
+            backgroundColor: '#95a5a6'
         }]
     };
     
@@ -588,9 +506,6 @@ function createFallbackChart(canvasId, type, title) {
         options: {
             responsive: true,
             plugins: {
-                legend: {
-                    position: 'top',
-                },
                 title: {
                     display: true,
                     text: '⚠️ ' + title + ' - Données temporairement indisponibles'
@@ -615,49 +530,62 @@ async function updateDashboard() {
     currentFilters = { city, year, season };
     
     showLoading();
+    hideError();
     
     try {
+        console.log('🔄 Mise à jour avec filtres:', currentFilters);
+        
         await updateStatistics(city, year, season);
         await refreshCharts();
+        
         hideLoading();
+        console.log('✅ Mise à jour terminée avec succès');
+        
     } catch (error) {
         hideLoading();
+        console.error('❌ Erreur mise à jour:', error);
         showError('Erreur lors de la mise à jour: ' + error.message);
     }
 }
 
 async function updateStatistics(city, year, season) {
     try {
-        let url = '/api/stats/global';
+        let url;
         if (city !== 'all') {
             url = `/api/cities/${city}?year=${year}`;
+        } else {
+            url = '/api/stats/global';
         }
         
+        console.log('🔍 Appel API:', url);
+        
         const response = await fetch(url);
-        if (!response.ok) throw new Error('Erreur API statistics');
+        if (!response.ok) {
+            throw new Error(`Erreur API: ${response.status} ${response.statusText}`);
+        }
+        
         const stats = await response.json();
+        console.log('📊 Données reçues:', stats);
         
         if (city !== 'all') {
-            // Données spécifiques à la ville
             document.getElementById('pm25-value').textContent = `${stats.avgPM25 ? stats.avgPM25.toFixed(1) : 'N/A'} μg/m³`;
             document.getElementById('pm10-value').textContent = `${stats.avgPM10 ? stats.avgPM10.toFixed(1) : 'N/A'} μg/m³`;
             document.getElementById('aqi-value').textContent = stats.avgAQI ? Math.round(stats.avgAQI) : 'N/A';
             document.getElementById('stations-value').textContent = stats.records || 'N/A';
         } else {
-            // Données globales
             document.getElementById('pm25-value').textContent = `${stats.pm25 ? stats.pm25.toFixed(1) : 'N/A'} μg/m³`;
             document.getElementById('pm10-value').textContent = `${stats.pm10 ? stats.pm10.toFixed(1) : 'N/A'} μg/m³`;
             document.getElementById('aqi-value').textContent = stats.aqi ? Math.round(stats.aqi) : 'N/A';
             document.getElementById('stations-value').textContent = stats.activeStations || 'N/A';
         }
+        
     } catch (error) {
-        console.error('Erreur mise à jour statistiques:', error);
-        throw error;
+        console.error('❌ Erreur mise à jour statistiques:', error);
+        throw new Error('Erreur API statistics: ' + error.message);
     }
 }
 
 async function refreshCharts() {
-    // Recréer tous les graphiques avec les nouveaux filtres
     await createPollutionChart();
     await createCityPollutionChart();
     await createSeasonalChart();
@@ -671,7 +599,4 @@ document.addEventListener('DOMContentLoaded', function() {
     setupFilters();
     
     console.log('Tableau de bord initialisé avec données réelles');
-    
-    // Mettre à jour le statut toutes les 30 secondes
-    setInterval(updateAPIStatus, 30000);
 });

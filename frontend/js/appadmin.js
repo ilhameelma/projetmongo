@@ -1,7 +1,7 @@
 let currentStationsPage = 1;
 let currentAirQualityPage = 1;
 const itemsPerPage = 10;
-
+const API_BASE = '/api/admin';
 // Initialize application
 document.addEventListener('DOMContentLoaded', function() {
     loadStats();
@@ -30,45 +30,59 @@ function openTab(tabName) {
 }
 
 // Load database statistics
+// Load database statistics - CORRIGÉ
 async function loadStats() {
     try {
-        const response = await fetch('/api/stats');
-        const result = await response.json();
+        const response = await fetch(`${API_BASE}/stats`);
+        const data = await response.json();
         
-        if (result.success) {
-            const statsContainer = document.getElementById('stats');
-            statsContainer.innerHTML = '';
-            
-            for (const [collection, count] of Object.entries(result.data)) {
-                const statCard = document.createElement('div');
-                statCard.className = 'stat-card';
-                statCard.innerHTML = `
-                    <h3>${collection}</h3>
-                    <div class="count">${count.toLocaleString()}</div>
-                `;
-                statsContainer.appendChild(statCard);
-            }
-        }
+        const statsContainer = document.getElementById('stats');
+        statsContainer.innerHTML = '';
+        
+        // Format adapté à votre nouvelle API
+        const statsData = [
+            { name: 'Stations', value: data.stationCount || 0 },
+            { name: 'Air Quality Data', value: data.airQualityCount || 0 },
+            { name: 'Cities', value: data.cityCount || 0 },
+            { name: 'Last Update', value: data.lastUpdate ? new Date(data.lastUpdate).toLocaleDateString() : 'N/A' }
+        ];
+        
+        statsData.forEach(stat => {
+            const statCard = document.createElement('div');
+            statCard.className = 'stat-card';
+            statCard.innerHTML = `
+                <h3>${stat.name}</h3>
+                <div class="count">${stat.value}</div>
+            `;
+            statsContainer.appendChild(statCard);
+        });
+        
     } catch (error) {
         console.error('Error loading stats:', error);
+        document.getElementById('stats').innerHTML = '<div class="error">Error loading statistics</div>';
     }
 }
 
-// Stations management
+// Stations management - CORRIGÉ
 async function loadStations(page = 1) {
     try {
         const search = document.getElementById('stationSearch').value;
-        const response = await fetch(`/api/stations?page=${page}&limit=${itemsPerPage}&search=${encodeURIComponent(search)}`);
-        const result = await response.json();
+        const response = await fetch(`${API_BASE}/stations?page=${page}&limit=${itemsPerPage}&search=${encodeURIComponent(search)}`);
+        const data = await response.json();
         
-        if (result.success) {
-            displayStations(result.data);
-            displayPagination('stationsPagination', result.pagination, loadStations);
-        }
+        displayStations(data.stations);
+        displayPagination('stationsPagination', {
+            page: data.currentPage,
+            pages: data.totalPages,
+            total: data.total
+        }, loadStations);
+        
     } catch (error) {
         console.error('Error loading stations:', error);
+        document.getElementById('stationsTable').innerHTML = '<p>Error loading stations</p>';
     }
 }
+
 
 function displayStations(stations) {
     const tableContainer = document.getElementById('stationsTable');
@@ -121,15 +135,19 @@ async function loadAirQualityData(page = 1) {
         const city = document.getElementById('cityFilter').value;
         const date = document.getElementById('dateFilter').value;
         
-        const response = await fetch(`/api/air-quality?page=${page}&limit=${itemsPerPage}&city=${encodeURIComponent(city)}&date=${encodeURIComponent(date)}`);
-        const result = await response.json();
+        const response = await fetch(`${API_BASE}/air-quality?page=${page}&limit=${itemsPerPage}&city=${encodeURIComponent(city)}&date=${encodeURIComponent(date)}`);
+        const data = await response.json();
         
-        if (result.success) {
-            displayAirQualityData(result.data);
-            displayPagination('airQualityPagination', result.pagination, loadAirQualityData);
-        }
+        displayAirQualityData(data.data);
+        displayPagination('airQualityPagination', {
+            page: data.currentPage,
+            pages: data.totalPages,
+            total: data.total
+        }, loadAirQualityData);
+        
     } catch (error) {
         console.error('Error loading air quality data:', error);
+        document.getElementById('airQualityTable').innerHTML = '<p>Error loading air quality data</p>';
     }
 }
 
@@ -181,12 +199,16 @@ function displayAirQualityData(data) {
 async function loadFilters() {
     try {
         // Load cities
-        const citiesResponse = await fetch('/api/filters/cities');
+        const citiesResponse = await fetch(`${API_BASE}/filters/cities`);
         const citiesResult = await citiesResponse.json();
         
         if (citiesResult.success) {
             const cityFilter = document.getElementById('cityFilter');
             const testCity = document.getElementById('testCity');
+            
+            // Vider les selects existants
+            cityFilter.innerHTML = '<option value="">All Cities</option>';
+            testCity.innerHTML = '<option value="">Select City</option>';
             
             citiesResult.data.forEach(city => {
                 const option1 = new Option(city, city);
@@ -197,11 +219,12 @@ async function loadFilters() {
         }
 
         // Load stations
-        const stationsResponse = await fetch('/api/filters/stations');
+        const stationsResponse = await fetch(`${API_BASE}/filters/stations`);
         const stationsResult = await stationsResponse.json();
         
         if (stationsResult.success) {
             const testStation = document.getElementById('testStation');
+            testStation.innerHTML = '<option value="">Select Station</option>';
             
             stationsResult.data.forEach(station => {
                 const option = new Option(station, station);
@@ -222,7 +245,7 @@ async function runCityPerformanceTest() {
     }
 
     try {
-        const response = await fetch(`/api/performance/city-data?city=${encodeURIComponent(city)}`);
+        const response = await fetch(`${API_BASE}/performance/city-data?city=${encodeURIComponent(city)}`);
         const result = await response.json();
         
         if (result.success) {
@@ -248,7 +271,7 @@ async function runStationPerformanceTest() {
     }
 
     try {
-        const response = await fetch(`/api/performance/station-data?stationId=${encodeURIComponent(stationId)}`);
+        const response = await fetch(`${API_BASE}/performance/station-data?stationId=${encodeURIComponent(stationId)}`);
         const result = await response.json();
         
         if (result.success) {
@@ -265,6 +288,10 @@ async function runStationPerformanceTest() {
         console.error('Error running performance test:', error);
     }
 }
+
+
+
+
 
 // Station CRUD operations
 function showAddStationForm() {
