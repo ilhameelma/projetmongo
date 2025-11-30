@@ -313,85 +313,86 @@
     <div class="container">
         <header class="header">
             <div class="header-title">
-                <h1>🌍 Surveillance Qualité Air - Inde</h1>
-                <p>Analyse détaillée par ville</p>
+                <h1>🌍 Air Quality Monitoring - India</h1>
+                <p>Detailed city analysis</p>
             </div>
             <nav class="nav">
-                <a href="index.html">Carte</a>
-                <a href="#" class="active">Détails Ville</a>
-                <a href="#">Statistiques</a>
+                <a href="index.html">Map</a>
+                <a href="#" class="active">City Details</a>
+                <a href="#">Statistics</a>
             </nav>
             <a href="index.html" class="back-button">
-                ← Retour à la carte
+                ← Back to map
             </a>
         </header>
 
         <div class="city-header" id="city-header">
-            <h1 class="city-title" id="city-title">Chargement...</h1>
-            <p>Analyse complète de la qualité de l'air</p>
+            <h1 class="city-title" id="city-title">Loading...</h1>
+            <p>Complete air quality analysis</p>
             <div class="aqi-badge" id="aqi-badge">
-                AQI Moyen: <span id="current-aqi">--</span>
+                Average AQI: <span id="current-aqi">--</span>
                 <span id="aqi-category"></span>
             </div>
         </div>
 
         <div class="dashboard">
             <div class="time-filter">
-                <button class="time-btn active" onclick="changeTimeRange('year')">📅 Annuel</button>
-                <button class="time-btn" onclick="changeTimeRange('month')">📊 Mensuel</button>
-                <button class="time-btn" onclick="changeTimeRange('week')">📈 Hebdomadaire</button>
-                <button class="time-btn" onclick="changeTimeRange('day')">🌡️ Quotidien</button>
+                <button class="time-btn active" onclick="changeTimeRange('year')">📅 Yearly</button>
+                <button class="time-btn" onclick="changeTimeRange('month')">📊 Monthly</button>
+                <button class="time-btn" onclick="changeTimeRange('week')">📈 Weekly</button>
+                <button class="time-btn" onclick="changeTimeRange('day')">🌡️ Daily</button>
             </div>
 
             <div id="alert-banner" class="alert-banner" style="display: none;">
-                <h3>⚠️ Alerte Pollution Élevée</h3>
-                <p>La qualité de l'air est actuellement dangereuse pour la santé - Évitez les activités extérieures</p>
+                <h3>⚠️ High Pollution Alert</h3>
+                <p>Air quality is currently dangerous for health - Avoid outdoor activities</p>
             </div>
 
             <div class="stats-grid" id="stats-grid">
-                <div class="loading">Chargement des statistiques...</div>
+                <div class="loading">Loading statistics...</div>
             </div>
 
             <div class="charts-grid">
                 <div class="chart-container">
-                    <div class="chart-title">📈 Évolution de l'AQI</div>
+                    <div class="chart-title">📈 AQI Evolution</div>
                     <canvas id="aqiEvolutionChart"></canvas>
                 </div>
 
                 <div class="chart-container">
-                    <div class="chart-title">🌫️ Composition des polluants</div>
+                    <div class="chart-title">🌫️ Pollutants Composition</div>
                     <canvas id="pollutantsChart"></canvas>
                 </div>
 
                 <div class="chart-container full-width">
-                    <div class="chart-title">📊 Tendances saisonnières</div>
+                    <div class="chart-title">📊 Seasonal Trends</div>
                     <canvas id="seasonalChart"></canvas>
                 </div>
 
                 <div class="chart-container">
-                    <div class="chart-title">⏰ Variation horaire</div>
+                    <div class="chart-title">⏰ Hourly Variation</div>
                     <canvas id="hourlyChart"></canvas>
                 </div>
 
                 <div class="chart-container">
-                    <div class="chart-title">🎯 Catégories AQI</div>
+                    <div class="chart-title">🎯 AQI Categories</div>
                     <canvas id="categoryChart"></canvas>
                 </div>
             </div>
 
             <div class="stations-section">
-                <div class="chart-title">🏭 Stations de surveillance</div>
+                <div class="chart-title">🏭 Monitoring Stations</div>
                 <div id="stations-list" class="stations-grid">
-                    <div class="loading">Chargement des stations...</div>
+                    <div class="loading">Loading stations...</div>
                 </div>
             </div>
 
             <div class="comparison-section">
-                <div class="chart-title">🏙️ Comparaison nationale</div>
+                <div class="chart-title">🏙️ National Comparison</div>
                 <canvas id="comparisonChart"></canvas>
             </div>
         </div>
     </div>
+</body>
 
     <script>
        
