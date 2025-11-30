@@ -1409,5 +1409,9 @@ async function startServer() {
         process.exit(1);
     }
 }
+// Route pour la page de documentation airQuality
+app.get('/airQuality', (req, res) => {
+    res.sendFile(path.join(__dirname, '..',airQuality.html));
+});
 
 startServer();
