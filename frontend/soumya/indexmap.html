@@ -6,7 +6,6 @@
     <title>Carte Qualité Air - Inde</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <style>
-        /* VOTRE CSS EXISTANT - PAS DE CHANGEMENTS */
         * {
             margin: 0;
             padding: 0;
@@ -224,16 +223,17 @@
             transform: translateY(-2px);
         }
 
+        /* Carte d'identité de la ville - ÉLARGIE */
         .city-info-panel {
             position: absolute;
             top: 80px;
             right: 20px;
             z-index: 1000;
             background: white;
-            padding: 20px;
+            padding: 25px;
             border-radius: 12px;
             box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-            width: 320px;
+            width: 420px;
             max-height: calc(100vh - 200px);
             overflow-y: auto;
             display: none;
@@ -255,13 +255,13 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
             border-bottom: 2px solid #f0f0f0;
         }
 
         .city-info-title {
-            font-size: 1.3em;
+            font-size: 1.4em;
             color: #2c3e50;
             font-weight: 600;
         }
@@ -289,89 +289,130 @@
 
         .aqi-badge {
             display: inline-block;
-            padding: 8px 16px;
-            border-radius: 20px;
+            padding: 10px 20px;
+            border-radius: 25px;
             color: white;
             font-weight: 600;
-            font-size: 1.1em;
-            margin: 10px 0;
+            font-size: 1.2em;
+            margin: 15px 0;
+            text-align: center;
+            width: 100%;
         }
 
         .city-stats {
-            margin: 15px 0;
+            margin: 20px 0;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
         }
 
         .stat-item {
             display: flex;
             justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid #f5f5f5;
+            padding: 10px 0;
+            border-bottom: 1px solid #e8e8e8;
+        }
+
+        .stat-item:last-child {
+            border-bottom: none;
         }
 
         .stat-label {
             color: #666;
-            font-size: 0.95em;
+            font-size: 1em;
         }
 
         .stat-value {
             font-weight: 600;
             color: #2c3e50;
+            font-size: 1em;
         }
 
         .stations-section {
-            margin-top: 20px;
+            margin-top: 25px;
         }
 
         .stations-section h4 {
             color: #2c3e50;
-            margin-bottom: 12px;
-            font-size: 1em;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .station-item {
             background: #f8f9fa;
-            padding: 10px;
+            padding: 12px;
             border-radius: 8px;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             border-left: 4px solid;
             transition: all 0.3s;
+            cursor: pointer;
         }
 
         .station-item:hover {
             transform: translateX(5px);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            background: #fff;
         }
 
         .station-name {
             font-weight: 600;
             color: #2c3e50;
-            font-size: 0.9em;
-            margin-bottom: 4px;
+            font-size: 0.95em;
+            margin-bottom: 6px;
         }
 
         .station-details {
-            font-size: 0.85em;
-            color: #666;
-        }
-
-        .station-counter {
-            position: absolute;
-            top: 80px;
-            right: 360px;
-            z-index: 1000;
-            background: rgba(255,255,255,0.95);
-            padding: 10px 15px;
-            border-radius: 8px;
             font-size: 0.9em;
-            display: none;
-            border: 2px solid #afe2da;
-            box-shadow: 0 2px 8px rgba(119, 184, 176, 0.2);
+            color: #666;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        .station-counter-value {
+        .station-aqi {
             font-weight: 600;
-            color: #6ecec0;
-            font-size: 1.1em;
+            padding: 4px 8px;
+            border-radius: 12px;
+            color: white;
+            font-size: 0.85em;
+        }
+
+        .view-more-btn {
+            background: linear-gradient(135deg, #6ecec0, #5abfaf);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1em;
+            width: 100%;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(110, 206, 192, 0.3);
+        }
+
+        .view-more-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(110, 206, 192, 0.4);
+            background: linear-gradient(135deg, #5abfaf, #4aafa0);
+        }
+
+        .city-description {
+            margin: 15px 0;
+            padding: 15px;
+            background: #f0f7ff;
+            border-radius: 8px;
+            border-left: 4px solid #6ecec0;
+        }
+
+        .city-description p {
+            color: #555;
+            line-height: 1.5;
+            margin: 0;
         }
     </style>
 </head>
@@ -379,8 +420,8 @@
     <div class="container">
         <header class="header">
             <div class="header-title">
-                <img src="/img.png" alt="Logo Qualité Air Inde" class="header-logo">
-                <h1 style="color: #6ecec0;">Surveillance Qualité Air - Inde</h1>
+                <img src="../img.png" alt="Logo Qualité Air Inde" class="header-logo">
+                <h1 style="color: #6ecec0;">Air Quality Monitoring - India</h1>
             </div>
 <!-- ✅ NOUVEAU - Liens corrigés -->
         <nav class="nav">
@@ -397,10 +438,6 @@
                 <button class="back-button" id="back-button" onclick="showAllCities()">
                     ← Vue d'ensemble
                 </button>
-                
-                <div class="station-counter" id="station-counter">
-                    Stations: <span class="station-counter-value" id="station-count">0</span>
-                </div>
 
                 <div class="search-overlay">
                     <div class="search-input-container">
@@ -416,6 +453,7 @@
                     <div class="search-results" id="search-results"></div>
                 </div>
 
+                <!-- Carte d'identité de la ville - UNE SEULE CARTE -->
                 <div class="city-info-panel" id="city-info-panel">
                     <div class="city-info-header">
                         <div class="city-info-title" id="city-name"></div>
@@ -423,49 +461,66 @@
                     </div>
                     
                     <div class="aqi-badge" id="city-aqi-badge">
-                        AQI: <span id="city-aqi-value"></span>
+                        Indice AQI: <span id="city-aqi-value"></span>
+                    </div>
+
+                    <div class="city-description">
+                        <p id="city-description-text"></p>
                     </div>
 
                     <div class="city-stats">
                         <div class="stat-item">
-                            <span class="stat-label">Nombre de stations</span>
+                            <span class="stat-label">📍 Number of stations</span>
                             <span class="stat-value" id="city-stations-count"></span>
                         </div>
                         <div class="stat-item">
-                            <span class="stat-label">Dernière mise à jour</span>
+                            <span class="stat-label">📊 Average AQI</span>
+                            <span class="stat-value" id="city-avg-aqi"></span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">🔄 Last updated</span>
                             <span class="stat-value" id="city-update-date"></span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">🏭 Main pollutants</span>
+                            <span class="stat-value" id="city-pollutants"></span>
                         </div>
                     </div>
 
                     <div class="stations-section">
-                        <h4>📍 Stations de mesure</h4>
+                        <h4>📍 Measuring stations</h4>
                         <div id="stations-list"></div>
                     </div>
+
+                    <button class="view-more-btn" onclick="viewCityDetails()">
+                        See more details
+                    </button>
                 </div>
 
                 <div id="map"></div>
 
+                <!-- LÉGENDE CONSERVÉE -->
                 <div class="legend">
-                    <h4>Légende AQI</h4>
+                    <h4>AQI Legend</h4>
                     <div class="legend-item">
                         <div class="legend-color" style="background: #afe2da; border: 1px solid #8cd5ca;"></div>
-                        <span>Bon (0-50)</span>
+                        <span>Good (0-50)</span>
                     </div>
                     <div class="legend-item">
                         <div class="legend-color" style="background: #e2f0af; border: 1px solid #d0e28c;"></div>
-                        <span>Modéré (51-100)</span>
+                        <span>Moderate (51-100)</span>
                     </div>
                     <div class="legend-item">
                         <div class="legend-color" style="background: #f0e2af; border: 1px solid #e2d08c;"></div>
-                        <span>Mauvais (101-200)</span>
+                        <span>Bad (101-200)</span>
                     </div>
                     <div class="legend-item">
                         <div class="legend-color" style="background: #f0afaf; border: 1px solid #e28c8c;"></div>
-                        <span>Très mauvais (201-300)</span>
+                        <span>Very bad (201-300)</span>
                     </div>
                     <div class="legend-item">
                         <div class="legend-color" style="background: #d56a6a; border: 1px solid #d56a6a;"></div>
-                        <span>Sévère (301-500)</span>
+                        <span>Severe (301-500)</span>
                     </div>
                 </div>
             </div>
@@ -475,438 +530,465 @@
 <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 <script>
 function redirectToAdmin() {
-    window.location.href = "/admin"; // Cette route est correcte
+    window.location.href = "/admin";
 }
 
+// Données initiales
+let citiesData = {};
 
-    // Données initiales
-    let citiesData = {};
+const map = L.map('map').setView([20.5937, 78.9629], 5);
 
-    const map = L.map('map').setView([20.5937, 78.9629], 5);
+const indiaBounds = L.latLngBounds(
+    L.latLng(6.0, 68.0),
+    L.latLng(36.0, 98.0)
+);
+
+map.setMaxBounds(indiaBounds);
+map.setMinZoom(4);
+map.setMaxZoom(15);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap',
+    maxBounds: indiaBounds
+}).addTo(map);
+
+let markers = [];
+let cityMarkers = [];
+let stationMarkers = [];
+let currentCity = null;
+
+// Fonction UNIQUE pour obtenir les coordonnées d'une ville
+function getCityCoordinates(cityName) {
+    const cityCoordinates = {
+        "Delhi": [28.6139, 77.2090],
+        "Mumbai": [19.0760, 72.8777],
+        "Chennai": [13.0827, 80.2707],
+        "Bangalore": [12.9716, 77.5946],
+        "Kolkata": [22.5726, 88.3639],
+        "Hyderabad": [17.3850, 78.4867],
+        "Ahmedabad": [23.0225, 72.5714],
+        "Pune": [18.5204, 73.8567],
+        "Jaipur": [26.9124, 75.7873],
+        "Lucknow": [26.8467, 80.9462],
+        "Kanpur": [26.4499, 80.3319],
+        "Nagpur": [21.1458, 79.0882],
+        "Indore": [22.7196, 75.8577],
+        "Thane": [19.2183, 72.9781],
+        "Bhopal": [23.2599, 77.4126],
+        "Visakhapatnam": [17.6868, 83.2185],
+        "Patna": [25.5941, 85.1376],
+        "Vadodara": [22.3072, 73.1812],
+        "Ghaziabad": [28.6692, 77.4538],
+        "Ludhiana": [30.9010, 75.8573],
+        "Agra": [27.1767, 78.0081],
+        "Nashik": [20.0059, 73.7910],
+        "Faridabad": [28.4089, 77.3178],
+        "Meerut": [28.9845, 77.7064],
+        "Rajkot": [22.3039, 70.8022],
+        "Kalyan-Dombivli": [19.2352, 73.1299],
+        "Vasai-Virar": [19.4259, 72.8225],
+        "Varanasi": [25.3176, 82.9739],
+        "Srinagar": [34.0836, 74.7973],
+        "Aurangabad": [19.8762, 75.3433],
+        "Dhanbad": [23.7957, 86.4304],
+        "Amritsar": [31.6340, 74.8723],
+        "Navi Mumbai": [19.0330, 73.0297],
+        "Allahabad": [25.4358, 81.8463],
+        "Ranchi": [23.3441, 85.3096],
+        "Howrah": [22.5958, 88.2636],
+        "Coimbatore": [11.0168, 76.9558],
+        "Jabalpur": [23.1815, 79.9864],
+        "Gwalior": [26.2183, 78.1828],
+        "Vijayawada": [16.5062, 80.6480],
+        "Jodhpur": [26.2389, 73.0243],
+        "Madurai": [9.9252, 78.1198],
+        "Raipur": [21.2514, 81.6296],
+        "Kota": [25.2138, 75.8648],
+        "Chandigarh": [30.7333, 76.7794],
+        "Guwahati": [26.1445, 91.7362],
+        "Solapur": [17.6599, 75.9064],
+        "Hubli-Dharwad": [15.3647, 75.1240],
+        "Mysore": [12.2958, 76.6394],
+        "Tiruchirappalli": [10.7905, 78.7047],
+        "Bareilly": [28.3670, 79.4304],
+        "Aligarh": [27.8974, 78.0880],
+        "Tiruppur": [11.1085, 77.3411],
+        "Gurgaon": [28.4595, 77.0266],
+        "Moradabad": [28.8389, 78.7768],
+        "Jalandhar": [31.3260, 75.5762],
+        "Bhubaneswar": [20.2961, 85.8245],
+        "Salem": [11.6643, 78.1460],
+        "Warangal": [17.9689, 79.5941],
+        "Guntur": [16.3067, 80.4365],
+        "Bhiwandi": [19.3002, 73.0588],
+        "Saharanpur": [29.9670, 77.5450],
+        "Gorakhpur": [26.7606, 83.3732],
+        "Bikaner": [28.0229, 73.3119],
+        "Amravati": [20.9374, 77.7796],
+        "Noida": [28.5355, 77.3910],
+        "Jamshedpur": [22.8046, 86.2029],
+        "Bhilai": [21.2092, 81.4285],
+        "Cuttack": [20.4625, 85.8820],
+        "Firozabad": [27.1590, 78.3958],
+        "Kochi": [9.9312, 76.2673],
+        "Nellore": [14.4426, 79.9865],
+        "Bhavnagar": [21.7645, 72.1519],
+        "Dehradun": [30.3165, 78.0322],
+        "Durgapur": [23.5204, 87.3119],
+        "Asansol": [23.6739, 86.9524],
+        "Rourkela": [22.2604, 84.8536],
+        "Nanded": [19.1383, 77.3210],
+        "Kolhapur": [16.7050, 74.2433],
+        "Ajmer": [26.4499, 74.6399],
+        "Akola": [20.7096, 77.0022],
+        "Gulbarga": [17.3297, 76.8343],
+        "Jamnagar": [22.4707, 70.0577],
+        "Ujjain": [23.1824, 75.7764],
+        "Loni": [28.7515, 77.2885],
+        "Siliguri": [26.7271, 88.3953],
+        "Jhansi": [25.4484, 78.5685],
+        "Ulhasnagar": [19.2215, 73.1645],
+        "Jammu": [32.7266, 74.8570],
+        "Sangli-Miraj-Kupwad": [16.8524, 74.5815],
+        "Mangalore": [12.9141, 74.8560],
+        "Erode": [11.3410, 77.7172],
+        "Belgaum": [15.8497, 74.4977],
+        "Ambattur": [13.1144, 80.1548],
+        "Tirunelveli": [8.7139, 77.7567],
+        "Malegaon": [20.5535, 74.5250]
+    };
     
-    const indiaBounds = L.latLngBounds(
-        L.latLng(6.0, 68.0),
-        L.latLng(36.0, 98.0)
-    );
-    
-    map.setMaxBounds(indiaBounds);
-    map.setMinZoom(4);
-    map.setMaxZoom(15);
+    return cityCoordinates[cityName] || [20.5937, 78.9629];
+}
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap',
-        maxBounds: indiaBounds
-    }).addTo(map);
+// Fonction pour obtenir la description d'une ville
+function getCityDescription(cityName) {
+    const descriptions = {
+        "Delhi": "Capitale de l'Inde, Delhi fait face à des défis majeurs de qualité de l'air, particulièrement pendant l'hiver.",
+        "Mumbai": "Plus grande ville de l'Inde, Mumbai connaît une pollution importante due au trafic et à l'industrie.",
+        "Chennai": "Ville côtière du sud de l'Inde, Chennai bénéficie de vents marins mais souffre de la pollution industrielle.",
+        "Bangalore": "Capitale technologique de l'Inde, Bangalore voit sa qualité de l'air se dégrader avec la croissance urbaine.",
+        "Kolkata": "Ville historique de l'est de l'Inde, Kolkata lutte contre la pollution provenant des véhicules et des industries.",
+        "Hyderabad": "Ville en pleine expansion, Hyderabad connaît une augmentation de la pollution due à la construction et au trafic."
+    };
+    return descriptions[cityName] || "Informations détaillées sur la qualité de l'air de cette ville.";
+}
 
-    let markers = [];
-    let cityMarkers = [];
-    let stationMarkers = [];
-    let currentCity = null;
+// Fonction pour obtenir les polluants principaux
+function getCityPollutants(cityName) {
+    const pollutants = {
+        "Delhi": "PM2.5, PM10, NO2",
+        "Mumbai": "PM2.5, SO2, CO",
+        "Chennai": "PM10, O3, NO2",
+        "Bangalore": "PM2.5, CO, O3",
+        "Kolkata": "PM10, SO2, NO2",
+        "Hyderabad": "PM2.5, PM10, O3"
+    };
+    return pollutants[cityName] || "PM2.5, PM10";
+}
 
-    // Fonction UNIQUE pour obtenir les coordonnées d'une ville
-    function getCityCoordinates(cityName) {
-        const cityCoordinates = {
-            "Delhi": [28.6139, 77.2090],
-            "Mumbai": [19.0760, 72.8777],
-            "Chennai": [13.0827, 80.2707],
-            "Bangalore": [12.9716, 77.5946],
-            "Kolkata": [22.5726, 88.3639],
-            "Hyderabad": [17.3850, 78.4867],
-            "Ahmedabad": [23.0225, 72.5714],
-            "Pune": [18.5204, 73.8567],
-            "Jaipur": [26.9124, 75.7873],
-            "Lucknow": [26.8467, 80.9462],
-            "Kanpur": [26.4499, 80.3319],
-            "Nagpur": [21.1458, 79.0882],
-            "Indore": [22.7196, 75.8577],
-            "Thane": [19.2183, 72.9781],
-            "Bhopal": [23.2599, 77.4126],
-            "Visakhapatnam": [17.6868, 83.2185],
-            "Patna": [25.5941, 85.1376],
-            "Vadodara": [22.3072, 73.1812],
-            "Ghaziabad": [28.6692, 77.4538],
-            "Ludhiana": [30.9010, 75.8573],
-            "Agra": [27.1767, 78.0081],
-            "Nashik": [20.0059, 73.7910],
-            "Faridabad": [28.4089, 77.3178],
-            "Meerut": [28.9845, 77.7064],
-            "Rajkot": [22.3039, 70.8022],
-            "Kalyan-Dombivli": [19.2352, 73.1299],
-            "Vasai-Virar": [19.4259, 72.8225],
-            "Varanasi": [25.3176, 82.9739],
-            "Srinagar": [34.0836, 74.7973],
-            "Aurangabad": [19.8762, 75.3433],
-            "Dhanbad": [23.7957, 86.4304],
-            "Amritsar": [31.6340, 74.8723],
-            "Navi Mumbai": [19.0330, 73.0297],
-            "Allahabad": [25.4358, 81.8463],
-            "Ranchi": [23.3441, 85.3096],
-            "Howrah": [22.5958, 88.2636],
-            "Coimbatore": [11.0168, 76.9558],
-            "Jabalpur": [23.1815, 79.9864],
-            "Gwalior": [26.2183, 78.1828],
-            "Vijayawada": [16.5062, 80.6480],
-            "Jodhpur": [26.2389, 73.0243],
-            "Madurai": [9.9252, 78.1198],
-            "Raipur": [21.2514, 81.6296],
-            "Kota": [25.2138, 75.8648],
-            "Chandigarh": [30.7333, 76.7794],
-            "Guwahati": [26.1445, 91.7362],
-            "Solapur": [17.6599, 75.9064],
-            "Hubli-Dharwad": [15.3647, 75.1240],
-            "Mysore": [12.2958, 76.6394],
-            "Tiruchirappalli": [10.7905, 78.7047],
-            "Bareilly": [28.3670, 79.4304],
-            "Aligarh": [27.8974, 78.0880],
-            "Tiruppur": [11.1085, 77.3411],
-            "Gurgaon": [28.4595, 77.0266],
-            "Moradabad": [28.8389, 78.7768],
-            "Jalandhar": [31.3260, 75.5762],
-            "Bhubaneswar": [20.2961, 85.8245],
-            "Salem": [11.6643, 78.1460],
-            "Warangal": [17.9689, 79.5941],
-            "Guntur": [16.3067, 80.4365],
-            "Bhiwandi": [19.3002, 73.0588],
-            "Saharanpur": [29.9670, 77.5450],
-            "Gorakhpur": [26.7606, 83.3732],
-            "Bikaner": [28.0229, 73.3119],
-            "Amravati": [20.9374, 77.7796],
-            "Noida": [28.5355, 77.3910],
-            "Jamshedpur": [22.8046, 86.2029],
-            "Bhilai": [21.2092, 81.4285],
-            "Cuttack": [20.4625, 85.8820],
-            "Firozabad": [27.1590, 78.3958],
-            "Kochi": [9.9312, 76.2673],
-            "Nellore": [14.4426, 79.9865],
-            "Bhavnagar": [21.7645, 72.1519],
-            "Dehradun": [30.3165, 78.0322],
-            "Durgapur": [23.5204, 87.3119],
-            "Asansol": [23.6739, 86.9524],
-            "Rourkela": [22.2604, 84.8536],
-            "Nanded": [19.1383, 77.3210],
-            "Kolhapur": [16.7050, 74.2433],
-            "Ajmer": [26.4499, 74.6399],
-            "Akola": [20.7096, 77.0022],
-            "Gulbarga": [17.3297, 76.8343],
-            "Jamnagar": [22.4707, 70.0577],
-            "Ujjain": [23.1824, 75.7764],
-            "Loni": [28.7515, 77.2885],
-            "Siliguri": [26.7271, 88.3953],
-            "Jhansi": [25.4484, 78.5685],
-            "Ulhasnagar": [19.2215, 73.1645],
-            "Jammu": [32.7266, 74.8570],
-            "Sangli-Miraj-Kupwad": [16.8524, 74.5815],
-            "Mangalore": [12.9141, 74.8560],
-            "Erode": [11.3410, 77.7172],
-            "Belgaum": [15.8497, 74.4977],
-            "Ambattur": [13.1144, 80.1548],
-            "Tirunelveli": [8.7139, 77.7567],
-            "Malegaon": [20.5535, 74.5250]
-        };
+// Fonction pour charger les données depuis l'API
+async function loadCitiesData() {
+    try {
+        const response = await fetch('/api/cities');
+        const apiCitiesData = await response.json();
         
-        return cityCoordinates[cityName] || [20.5937, 78.9629];
-    }
-
-    // Fonction pour charger les données depuis l'API
-    async function loadCitiesData() {
-        try {
-            const response = await fetch('/api/cities');
-            const apiCitiesData = await response.json();
-            
-            // CORRECTION : Transformer correctement les données de l'API
-            citiesData = {};
-            apiCitiesData.forEach(city => {
-                const coordinates = getCityCoordinates(city.city);
-                if (coordinates) {
-                    citiesData[city.city] = {
-                        lat: coordinates[0],
-                        lng: coordinates[1],
-                        aqi: city.aqi || 0,
-                        stationCount: city.stationCount || 0,
-                        lastUpdate: city.lastUpdate,
-                        stations: [] // Seront chargés plus tard
-                    };
-                }
-            });
-            
-            updateMapWithRealData();
-        } catch (error) {
-            console.error('Erreur chargement données API:', error);
-            initStaticData();
-        }
-    }
-
-    // Données statiques de fallback
-    function initStaticData() {
-        citiesData = {
-            "Delhi": { 
-                lat: 28.6139, lng: 77.2090, 
-                aqi: 356,
-                stationCount: 5,
-                stations: [
-                    { id: "DL001", lat: 28.6139, lng: 77.2090, name: "Alipur, Delhi - DPCC", aqi: 356, status: "Active" }
-                ]
-            },
-            "Mumbai": { 
-                lat: 19.0760, lng: 72.8777, 
-                aqi: 245,
-                stationCount: 4,
-                stations: []
+        // Transformer les données de l'API dans le format attendu
+        citiesData = {};
+        apiCitiesData.forEach(city => {
+            const coordinates = getCityCoordinates(city.city);
+            if (coordinates) {
+                citiesData[city.city] = {
+                    lat: coordinates[0],
+                    lng: coordinates[1],
+                    aqi: city.aqi || 0,
+                    stationCount: city.stationCount || 0,
+                    lastUpdate: city.lastUpdate,
+                    description: getCityDescription(city.city),
+                    pollutants: getCityPollutants(city.city),
+                    stations: city.stations || []
+                };
             }
-        };
+        });
+        
         updateMapWithRealData();
+    } catch (error) {
+        console.error('Erreur chargement données API:', error);
+        initStaticData();
     }
+}
 
-    // Mettre à jour la carte avec les données
-    function updateMapWithRealData() {
-        markers.forEach(marker => map.removeLayer(marker));
-        markers = [];
-        cityMarkers = [];
-        stationMarkers = [];
-
-        document.getElementById('back-button').style.display = 'none';
-        document.getElementById('station-counter').style.display = 'none';
-
-        Object.keys(citiesData).forEach(city => {
-            const data = citiesData[city];
-            const color = getAQIColor(data.aqi);
-            
-            const marker = L.circleMarker([data.lat, data.lng], {
-                color: color,
-                fillColor: color,
-                fillOpacity: 0.8,
-                radius: 15,
-                weight: 3
-            }).addTo(map);
-
-            marker.bindPopup(createCityPopup(city, data));
-            
-            marker.on('click', function() {
-                zoomToCity(city, data);
-            });
-
-            cityMarkers.push(marker);
-            markers.push(marker);
-        });
-    }
-
-    // Charger les stations depuis l'API quand on clique sur une ville
-    async function loadCityStations(cityName) {
-        try {
-            const response = await fetch(`/api/city/${cityName}`);
-            const cityData = await response.json();
-            
-            // CORRECTION : Adapter au format de votre API
-            return cityData.stations || [];
-        } catch (error) {
-            console.error('Erreur chargement stations:', error);
-            return citiesData[cityName]?.stations || [];
+// Données statiques de fallback
+function initStaticData() {
+    citiesData = {
+        "Delhi": { 
+            lat: 28.6139, lng: 77.2090, 
+            aqi: 356,
+            stationCount: 5,
+            description: getCityDescription("Delhi"),
+            pollutants: getCityPollutants("Delhi"),
+            stations: [
+                { id: "DL001", lat: 28.6139, lng: 77.2090, name: "Alipur, Delhi - DPCC", aqi: 356, status: "Active" }
+            ]
+        },
+        "Mumbai": { 
+            lat: 19.0760, lng: 72.8777, 
+            aqi: 245,
+            stationCount: 4,
+            description: getCityDescription("Mumbai"),
+            pollutants: getCityPollutants("Mumbai"),
+            stations: []
         }
-    }
+    };
+    updateMapWithRealData();
+}
 
-    async function zoomToCity(city, data) {
-        currentCity = city;
-        
-        map.setView([data.lat, data.lng], 12);
-        
-        document.getElementById('back-button').style.display = 'block';
-        
-        // Charger les stations depuis l'API
-        const stations = await loadCityStations(city);
-        document.getElementById('station-count').textContent = stations.length;
-        document.getElementById('station-counter').style.display = 'block';
-        
-        showCityInfo(city, { ...data, stations });
-        showStations(city, { ...data, stations });
-    }
+// Mettre à jour la carte avec les données
+function updateMapWithRealData() {
+    markers.forEach(marker => map.removeLayer(marker));
+    markers = [];
+    cityMarkers = [];
+    stationMarkers = [];
 
-    function showStations(city, data) {
-        cityMarkers.forEach(marker => {
-            marker.setStyle({opacity: 0.3, fillOpacity: 0.3});
+    document.getElementById('back-button').style.display = 'none';
+
+    Object.keys(citiesData).forEach(city => {
+        const data = citiesData[city];
+        const color = getAQIColor(data.aqi);
+        
+        const marker = L.circleMarker([data.lat, data.lng], {
+            color: color,
+            fillColor: color,
+            fillOpacity: 0.8,
+            radius: 15,
+            weight: 3
+        }).addTo(map);
+
+        marker.bindPopup(createCityPopup(city, data));
+        
+        marker.on('click', function() {
+            zoomToCity(city, data);
         });
 
-        stationMarkers.forEach(marker => map.removeLayer(marker));
-        stationMarkers = [];
+        cityMarkers.push(marker);
+        markers.push(marker);
+    });
+}
 
-        data.stations.forEach(station => {
-            // CORRECTION : Gérer les stations sans coordonnées
-            const stationLat = station.lat || station.Latitude || data.lat + (Math.random() - 0.5) * 0.02;
-            const stationLng = station.lng || station.Longitude || data.lng + (Math.random() - 0.5) * 0.02;
-            const stationAqi = station.aqi || station.AQI || data.aqi;
-            
-            const stationColor = getAQIColor(stationAqi);
-            const stationMarker = L.circleMarker([stationLat, stationLng], {
-                color: stationColor,
-                fillColor: stationColor,
-                fillOpacity: 0.9,
-                radius: 8,
-                weight: 2
-            }).addTo(map);
-
-            stationMarker.bindPopup(createStationPopup(city, station));
-            stationMarkers.push(stationMarker);
-            markers.push(stationMarker);
-        });
+// Charger les stations depuis l'API quand on clique sur une ville
+async function loadCityStations(cityName) {
+    try {
+        const response = await fetch(`/api/city/${cityName}`);
+        const cityData = await response.json();
+        return cityData.stations || [];
+    } catch (error) {
+        console.error('Erreur chargement stations:', error);
+        return citiesData[cityName]?.stations || [];
     }
+}
 
-    function showCityInfo(city, data) {
-        const panel = document.getElementById('city-info-panel');
-        const aqiColor = getAQIColor(data.aqi);
-        
-        document.getElementById('city-name').textContent = `🏙️ ${city}`;
-        document.getElementById('city-aqi-value').textContent = data.aqi;
-        document.getElementById('city-stations-count').textContent = data.stations.length;
-        document.getElementById('city-update-date').textContent = new Date(data.lastUpdate || Date.now()).toLocaleDateString('fr-FR');
-        
-        const aqiBadge = document.getElementById('city-aqi-badge');
-        aqiBadge.style.background = aqiColor;
-        
-        const stationsList = document.getElementById('stations-list');
-        stationsList.innerHTML = '';
-        
-        data.stations.forEach(station => {
-            const stationAqi = station.aqi || station.AQI || data.aqi;
-            const stationName = station.name || station.StationName || station.StationId || 'Station inconnue';
-            const stationStatus = station.status || 'Active';
-            
-            const stationItem = document.createElement('div');
-            stationItem.className = 'station-item';
-            stationItem.style.borderLeftColor = getAQIColor(stationAqi);
-            stationItem.innerHTML = `
-                <div class="station-name">${stationName}</div>
-                <div class="station-details">AQI: ${stationAqi} | ${stationStatus}</div>
-            `;
-            stationsList.appendChild(stationItem);
-        });
-        
-        panel.style.display = 'block';
-    }
+async function zoomToCity(city, data) {
+    currentCity = city;
+    
+    map.setView([data.lat, data.lng], 12);
+    
+    document.getElementById('back-button').style.display = 'block';
+    
+    // Charger les stations depuis l'API
+    const stations = await loadCityStations(city);
+    
+    showCityInfo(city, { ...data, stations });
+    showStations(city, { ...data, stations });
+}
 
-    function showAllCities() {
-        currentCity = null;
-        
-        stationMarkers.forEach(marker => map.removeLayer(marker));
-        stationMarkers = [];
-        
-        cityMarkers.forEach(marker => {
-            marker.setStyle({opacity: 1, fillOpacity: 0.8});
-        });
-        
-        document.getElementById('back-button').style.display = 'none';
-        document.getElementById('station-counter').style.display = 'none';
-        closeCityInfo();
-        
-        document.getElementById('city-search').value = '';
-        document.getElementById('search-results').style.display = 'none';
-        
-        map.setView([20.5937, 78.9629], 5);
-    }
+function showStations(city, data) {
+    cityMarkers.forEach(marker => {
+        marker.setStyle({opacity: 0.3, fillOpacity: 0.3});
+    });
 
-    function closeCityInfo() {
-        document.getElementById('city-info-panel').style.display = 'none';
-    }
+    stationMarkers.forEach(marker => map.removeLayer(marker));
+    stationMarkers = [];
 
-    function createCityPopup(city, data) {
-        return `
-            <div style="min-width: 200px">
-                <h3 style="margin: 0 0 10px 0; color: #2c3e50;">🏙️ ${city}</h3>
-                <div style="background: ${getAQIColor(data.aqi)}; color: white; padding: 8px; border-radius: 5px; margin-bottom: 10px;">
-                    <strong>AQI Moyen: ${data.aqi}</strong>
-                </div>
-                <p><strong>Stations:</strong> ${data.stationCount || data.stations?.length || 0}</p>
-                <button onclick="viewCityDetails('${city}')" style="background: #afe2da; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; margin-top: 8px;">
-                    Voir détails
-                </button>
-                <p style="font-size: 0.9em; color: #666; margin-top: 10px;">
-                    <em>Cliquez pour voir les détails</em>
-                </p>
-            </div>
-        `;
-    }
+    data.stations.forEach(station => {
+        const stationLat = station.lat || station.Latitude || data.lat + (Math.random() - 0.5) * 0.02;
+        const stationLng = station.lng || station.Longitude || data.lng + (Math.random() - 0.5) * 0.02;
+        const stationAqi = station.aqi || station.AQI || data.aqi;
+        
+        const stationColor = getAQIColor(stationAqi);
+        const stationMarker = L.circleMarker([stationLat, stationLng], {
+            color: stationColor,
+            fillColor: stationColor,
+            fillOpacity: 0.9,
+            radius: 8,
+            weight: 2
+        }).addTo(map);
 
-    function createStationPopup(city, station) {
-        const stationAqi = station.aqi || station.AQI || 'N/A';
+        stationMarker.bindPopup(createStationPopup(city, station));
+        stationMarkers.push(stationMarker);
+        markers.push(stationMarker);
+    });
+}
+
+function showCityInfo(city, data) {
+    const panel = document.getElementById('city-info-panel');
+    const aqiColor = getAQIColor(data.aqi);
+    
+    document.getElementById('city-name').textContent = `🏙️ ${city}`;
+    document.getElementById('city-aqi-value').textContent = data.aqi;
+    document.getElementById('city-stations-count').textContent = data.stations.length;
+    document.getElementById('city-avg-aqi').textContent = data.aqi;
+    document.getElementById('city-update-date').textContent = new Date(data.lastUpdate || Date.now()).toLocaleDateString('fr-FR');
+    document.getElementById('city-description-text').textContent = data.description;
+    document.getElementById('city-pollutants').textContent = data.pollutants;
+    
+    const aqiBadge = document.getElementById('city-aqi-badge');
+    aqiBadge.style.background = aqiColor;
+    
+    const stationsList = document.getElementById('stations-list');
+    stationsList.innerHTML = '';
+    
+    data.stations.forEach(station => {
+        const stationAqi = station.aqi || station.AQI || data.aqi;
         const stationName = station.name || station.StationName || station.StationId || 'Station inconnue';
-        const stationId = station.id || station.StationId || 'N/A';
         const stationStatus = station.status || 'Active';
         
-        return `
-            <div style="min-width: 220px">
-                <h4 style="margin: 0 0 8px 0; color: #2c3e50;">${stationName}</h4>
-                <div style="background: ${getAQIColor(stationAqi)}; color: white; padding: 6px; border-radius: 4px; margin-bottom: 8px;">
-                    <strong>AQI: ${stationAqi}</strong>
-                </div>
-                <p style="margin: 5px 0;"><strong>ID:</strong> ${stationId}</p>
-                <p style="margin: 5px 0;"><strong>Ville:</strong> ${city}</p>
-                <p style="margin: 5px 0;"><strong>Statut:</strong> ${stationStatus}</p>
+        const stationItem = document.createElement('div');
+        stationItem.className = 'station-item';
+        stationItem.style.borderLeftColor = getAQIColor(stationAqi);
+        stationItem.innerHTML = `
+            <div class="station-name">${stationName}</div>
+            <div class="station-details">
+                <span>${stationStatus}</span>
+                <span class="station-aqi" style="background: ${getAQIColor(stationAqi)}">AQI: ${stationAqi}</span>
             </div>
         `;
-    }
-
-function viewCityDetails(cityName) {
-    // Utilisez le chemin relatif correct
-    window.location.href = `/city-detail?city=${encodeURIComponent(cityName)}`;
+        stationsList.appendChild(stationItem);
+    });
+    
+    panel.style.display = 'block';
 }
 
-    // Recherche améliorée
-    const searchInput = document.getElementById('city-search');
-    const searchResults = document.getElementById('search-results');
+function viewCityDetails() {
+    if (currentCity) {
+        window.location.href = `/city-detail?city=${encodeURIComponent(currentCity)}`;
+    }
+}
 
-    searchInput.addEventListener('input', function(e) {
-        const searchTerm = e.target.value.toLowerCase().trim();
-        
-        if (searchTerm === '') {
-            searchResults.style.display = 'none';
-            if (!currentCity) {
-                cityMarkers.forEach(marker => {
-                    marker.setStyle({opacity: 1, fillOpacity: 0.8});
-                });
-            }
-            return;
-        }
+function showAllCities() {
+    currentCity = null;
+    
+    stationMarkers.forEach(marker => map.removeLayer(marker));
+    stationMarkers = [];
+    
+    cityMarkers.forEach(marker => {
+        marker.setStyle({opacity: 1, fillOpacity: 0.8});
+    });
+    
+    document.getElementById('back-button').style.display = 'none';
+    closeCityInfo();
+    
+    document.getElementById('city-search').value = '';
+    document.getElementById('search-results').style.display = 'none';
+    
+    map.setView([20.5937, 78.9629], 5);
+}
 
-        const matchingCities = Object.keys(citiesData).filter(city => 
-            city.toLowerCase().includes(searchTerm)
-        );
+function closeCityInfo() {
+    document.getElementById('city-info-panel').style.display = 'none';
+}
 
-        if (matchingCities.length > 0) {
-            searchResults.innerHTML = '';
-            matchingCities.forEach(city => {
-                const item = document.createElement('div');
-                item.className = 'search-result-item';
-                item.textContent = `${city} - AQI: ${citiesData[city].aqi}`;
-                item.onclick = () => {
-                    zoomToCity(city, citiesData[city]);
-                    searchInput.value = city;
-                    searchResults.style.display = 'none';
-                };
-                searchResults.appendChild(item);
+function createCityPopup(city, data) {
+    return `
+        <div style="min-width: 200px">
+            <h3 style="margin: 0 0 10px 0; color: #2c3e50;">🏙️ ${city}</h3>
+            <div style="background: ${getAQIColor(data.aqi)}; color: white; padding: 8px; border-radius: 5px; margin-bottom: 10px;">
+                <strong>AQI: ${data.aqi}</strong>
+            </div>
+            <p style="font-size: 0.9em; color: #666; margin-top: 10px;">
+                <em>Cliquez pour voir les détails</em>
+            </p>
+        </div>
+    `;
+}
+
+function createStationPopup(city, station) {
+    const stationAqi = station.aqi || station.AQI || 'N/A';
+    const stationName = station.name || station.StationName || station.StationId || 'Station inconnue';
+    const stationId = station.id || station.StationId || 'N/A';
+    const stationStatus = station.status || 'Active';
+    
+    return `
+        <div style="min-width: 220px">
+            <h4 style="margin: 0 0 8px 0; color: #2c3e50;">${stationName}</h4>
+            <div style="background: ${getAQIColor(stationAqi)}; color: white; padding: 6px; border-radius: 4px; margin-bottom: 8px;">
+                <strong>AQI: ${stationAqi}</strong>
+            </div>
+            <p style="margin: 5px 0;"><strong>ID:</strong> ${stationId}</p>
+            <p style="margin: 5px 0;"><strong>Ville:</strong> ${city}</p>
+            <p style="margin: 5px 0;"><strong>Statut:</strong> ${stationStatus}</p>
+        </div>
+    `;
+}
+
+// Recherche améliorée
+const searchInput = document.getElementById('city-search');
+const searchResults = document.getElementById('search-results');
+
+searchInput.addEventListener('input', function(e) {
+    const searchTerm = e.target.value.toLowerCase().trim();
+    
+    if (searchTerm === '') {
+        searchResults.style.display = 'none';
+        if (!currentCity) {
+            cityMarkers.forEach(marker => {
+                marker.setStyle({opacity: 1, fillOpacity: 0.8});
             });
-            searchResults.style.display = 'block';
-        } else {
-            searchResults.innerHTML = '<div class="search-result-item">Aucune ville trouvée</div>';
-            searchResults.style.display = 'block';
         }
-    });
-
-    searchInput.addEventListener('blur', function() {
-        setTimeout(() => {
-            searchResults.style.display = 'none';
-        }, 200);
-    });
-
-    function getAQIColor(aqi) {
-        if (aqi <= 50) return '#afe2da';
-        if (aqi <= 100) return '#e2f0af';
-        if (aqi <= 200) return '#f0e2af';
-        if (aqi <= 300) return '#f0afaf';
-        return '#d56a6a';
+        return;
     }
 
-    // Initialiser avec les données de l'API
-    document.addEventListener('DOMContentLoaded', function() {
-        loadCitiesData();
-    });
+    const matchingCities = Object.keys(citiesData).filter(city => 
+        city.toLowerCase().includes(searchTerm)
+    );
+
+    if (matchingCities.length > 0) {
+        searchResults.innerHTML = '';
+        matchingCities.forEach(city => {
+            const item = document.createElement('div');
+            item.className = 'search-result-item';
+            item.textContent = `${city} - AQI: ${citiesData[city].aqi}`;
+            item.onclick = () => {
+                zoomToCity(city, citiesData[city]);
+                searchInput.value = city;
+                searchResults.style.display = 'none';
+            };
+            searchResults.appendChild(item);
+        });
+        searchResults.style.display = 'block';
+    } else {
+        searchResults.innerHTML = '<div class="search-result-item">Aucune ville trouvée</div>';
+        searchResults.style.display = 'block';
+    }
+});
+
+searchInput.addEventListener('blur', function() {
+    setTimeout(() => {
+        searchResults.style.display = 'none';
+    }, 200);
+});
+
+function getAQIColor(aqi) {
+    if (aqi <= 50) return '#afe2da';
+    if (aqi <= 100) return '#e2f0af';
+    if (aqi <= 200) return '#f0e2af';
+    if (aqi <= 300) return '#f0afaf';
+    return '#d56a6a';
+}
+
+// Initialiser avec les données de l'API
+document.addEventListener('DOMContentLoaded', function() {
+    loadCitiesData();
+});
 </script>
 </body>
 </html>

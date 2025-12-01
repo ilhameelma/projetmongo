@@ -8,19 +8,27 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Chart.js avec fallback -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 </head>
 <body>
-    <header>
-        <div class="container">
-            <div class="header-content">
-                <div class="logo">
-                    <i class="fas fa-wind"></i>
-                    <div>
-                        <h1>Qualité de l'Air en Inde</h1>
-                        <span>Analyse des données 2015-2020 - MongoDB Shardé</span>
-                    </div>
-                </div>
+    <div class="container">
+        <header class="header">
+            <div class="header-title">
+                <img src="/img.png" alt="Logo Qualité Air Inde" class="header-logo">
+                <h1 style="color: #6ecec0;">Qualité de l'Air en Inde</h1>
+            </div>
+            <nav class="nav">
+                <a href="soumya/indexmap.html">Carte</a>
+                <a href="/" class="active">Statistiques</a>
+                <a href="airQuality.html">Documentation</a>
+            </nav>
+            <button class="admin-btn" onclick="redirectToAdmin()">
+                <i class="fas fa-cog"></i> ADMIN
+            </button>
+        </header>
+
+        <div class="content">
+            <!-- Filtres -->
+            <div class="filters-section">
                 <div class="filters">
                     <div class="filter-item">
                         <label for="city-select"><i class="fas fa-city"></i> Ville</label>
@@ -57,20 +65,16 @@
                         </select>
                     </div>
                 </div>
+                <div class="filter-info">
+                    <p><i class="fas fa-info-circle"></i> Les filtres mettent à jour automatiquement tous les graphiques et tableaux</p>
+                </div>
             </div>
-            <div class="filter-info">
-                <p><i class="fas fa-info-circle"></i> Les filtres mettent à jour automatiquement tous les graphiques et tableaux ci-dessous</p>
-            </div>
-        </div>
-    </header>
-    
-    <main class="dashboard">
-        <div class="container">
+
             <!-- Indicateur de chargement -->
             <div id="loadingIndicator" class="loading-indicator" style="display: flex;">
                 <div class="loading-spinner">
                     <i class="fas fa-sync fa-spin"></i>
-                    <span></span>
+                    <span>Chargement des données...</span>
                 </div>
             </div>
 
@@ -91,13 +95,13 @@
                 <div class="stat-card">
                     <div class="stat-header">
                         <h3>PM2.5 Moyen</h3>
-                        <div class="stat-icon" style="background-color: #e74c3c;">
+                        <div class="stat-icon">
                             <i class="fas fa-smog"></i>
                         </div>
                     </div>
                     <div class="stat-value" id="pm25-value">--</div>
                     <div class="stat-label">Particules fines</div>
-                    <div class="stat-trend trend-up">
+                    <div class="stat-trend">
                         <i class="fas fa-arrow-up"></i>
                         <span id="pm25-trend">Données en direct</span>
                     </div>
@@ -106,13 +110,13 @@
                 <div class="stat-card">
                     <div class="stat-header">
                         <h3>PM10 Moyen</h3>
-                        <div class="stat-icon" style="background-color: #f39c12;">
+                        <div class="stat-icon">
                             <i class="fas fa-industry"></i>
                         </div>
                     </div>
                     <div class="stat-value" id="pm10-value">--</div>
                     <div class="stat-label">Particules en suspension</div>
-                    <div class="stat-trend trend-down">
+                    <div class="stat-trend">
                         <i class="fas fa-arrow-down"></i>
                         <span id="pm10-trend">Données en direct</span>
                     </div>
@@ -121,13 +125,13 @@
                 <div class="stat-card">
                     <div class="stat-header">
                         <h3>AQI Moyen</h3>
-                        <div class="stat-icon" style="background-color: #3498db;">
+                        <div class="stat-icon">
                             <i class="fas fa-lungs"></i>
                         </div>
                     </div>
                     <div class="stat-value" id="aqi-value">--</div>
                     <div class="stat-label">Indice de qualité de l'air</div>
-                    <div class="stat-trend trend-up">
+                    <div class="stat-trend">
                         <i class="fas fa-arrow-up"></i>
                         <span id="aqi-trend">Données en direct</span>
                     </div>
@@ -136,13 +140,13 @@
                 <div class="stat-card">
                     <div class="stat-header">
                         <h3>Stations Actives</h3>
-                        <div class="stat-icon" style="background-color: #27ae60;">
+                        <div class="stat-icon">
                             <i class="fas fa-map-marker-alt"></i>
                         </div>
                     </div>
                     <div class="stat-value" id="stations-value">--</div>
                     <div class="stat-label">Points de surveillance</div>
-                    <div class="stat-trend trend-up">
+                    <div class="stat-trend">
                         <i class="fas fa-arrow-up"></i>
                         <span id="stations-trend">Réseau actif</span>
                     </div>
@@ -150,10 +154,10 @@
             </div>
             
             <!-- Graphiques -->
-            <section class="chart-section level-1">
+            <section class="chart-section">
                 <h2 class="section-title">Vue d'Ensemble</h2>
-                <div class="charts-level-1">
-                    <div class="chart-container main-chart">
+                <div class="charts-grid main-charts">
+                    <div class="chart-container">
                         <div class="chart-header">
                             <h3 class="chart-title"><i class="fas fa-chart-line"></i> Évolution de la Pollution (2015-2020)</h3>
                         </div>
@@ -165,7 +169,7 @@
                         </div>
                     </div>
                     
-                    <div class="chart-container main-chart">
+                    <div class="chart-container">
                         <div class="chart-header">
                             <h3 class="chart-title"><i class="fas fa-toggle-on"></i> Statut des Stations</h3>
                         </div>
@@ -179,10 +183,10 @@
                 </div>
             </section>
 
-            <section class="chart-section level-2">
+            <section class="chart-section">
                 <h2 class="section-title">Analyse par Ville</h2>
-                <div class="charts-level-2">
-                    <div class="chart-container medium-chart">
+                <div class="charts-grid medium-charts">
+                    <div class="chart-container">
                         <div class="chart-header">
                             <h3 class="chart-title"><i class="fas fa-chart-bar"></i> Pollution par Ville</h3>
                         </div>
@@ -194,7 +198,7 @@
                         </div>
                     </div>
                     
-                    <div class="chart-container medium-chart">
+                    <div class="chart-container">
                         <div class="chart-header">
                             <h3 class="chart-title"><i class="fas fa-map-marked-alt"></i> Stations par Ville</h3>
                         </div>
@@ -208,10 +212,10 @@
                 </div>
             </section>
 
-            <section class="chart-section level-3">
+            <section class="chart-section">
                 <h2 class="section-title">Analyse Temporelle</h2>
-                <div class="charts-level-3">
-                    <div class="chart-container medium-chart">
+                <div class="charts-grid medium-charts">
+                    <div class="chart-container">
                         <div class="chart-header">
                             <h3 class="chart-title"><i class="fas fa-cloud-sun"></i> Variation Saisonnière</h3>
                         </div>
@@ -223,7 +227,7 @@
                         </div>
                     </div>
                     
-                    <div class="chart-container medium-chart">
+                    <div class="chart-container">
                         <div class="chart-header">
                             <h3 class="chart-title"><i class="fas fa-chart-doughnut"></i> Distribution AQI</h3>
                         </div>
@@ -264,59 +268,13 @@
                 </div>
             </div>
         </div>
-    </main>
-    
-    <footer>
-        <div class="container">
-            <div class="footer-content">
-                <div class="logo">
-                    <i class="fas fa-wind"></i>
-                    <div>
-                        <h3>Qualité de l'Air en Inde</h3>
-                        <span>Données 2015-2020 - MongoDB Shardé</span>
-                    </div>
-                </div>
-                <div class="footer-info">
-                    <p><i class="fas fa-sync-alt"></i> Dernière mise à jour: <span id="lastUpdate">--</span></p>
-                    <p><i class="fas fa-database"></i> Statut Base: <span id="apiStatus">Connexion...</span></p>
-                    <p>&copy; 2024 Analyse de la Qualité de l'Air</p>
-                </div>
-            </div>
-        </div>
-    </footer>
+    </div>
 
-    <!-- Script principal -->
-    <script src="js/charts.js"></script>
-    
-    <!-- Fallback pour Chart.js -->
     <script>
-        // Vérification que Chart.js est chargé
-        setTimeout(function() {
-            if (typeof Chart === 'undefined') {
-                console.error('Chart.js non chargé, utilisation du fallback...');
-                document.getElementById('errorText').textContent = 'Chart.js n\'a pas pu être chargé. Affichage des données en mode tableau.';
-                document.getElementById('errorMessage').style.display = 'block';
-                
-                // Fallback: afficher les données sous forme de tableau
-                loadDataFallback();
-            }
-        }, 3000);
-
-        async function loadDataFallback() {
-            try {
-                const response = await fetch('/api/stats/global');
-                const data = await response.json();
-                
-                document.getElementById('pm25-value').textContent = data.pm25 ? data.pm25.toFixed(1) + ' μg/m³' : '--';
-                document.getElementById('pm10-value').textContent = data.pm10 ? data.pm10.toFixed(1) + ' μg/m³' : '--';
-                document.getElementById('aqi-value').textContent = data.aqi ? Math.round(data.aqi) : '--';
-                document.getElementById('stations-value').textContent = data.activeStations || '--';
-                
-            } catch (error) {
-                console.error('Erreur fallback:', error);
-            }
+        function redirectToAdmin() {
+            window.location.href = "/admin";
         }
     </script>
-    
+    <script src="js/charts.js"></script>
 </body>
 </html>
