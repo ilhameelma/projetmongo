@@ -1094,6 +1094,14 @@ app.get('/admin', (req, res) => {
     }
     res.sendFile(filePath);
 });
+app.get('/air-quality', (req, res) => {
+    const filePath = path.join(frontendRoot, 'air_quality.html');
+    console.log('🎯 Servir documentatio depuis:', filePath);
+    if (!fs.existsSync(filePath)) {
+        return res.status(404).send('Fichier admin non trouvé: ' + filePath);
+    }
+    res.sendFile(filePath);
+});
 
 app.get('/statistics', (req, res) => {
     const filePath = path.join(frontendRoot, 'index.html');

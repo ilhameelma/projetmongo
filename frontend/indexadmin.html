@@ -8,11 +8,24 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
+    
     <div class="container">
-        <header>
-            <h1><i class="fas fa-wind"></i> Air Quality Data Administration</h1>
-            <p>Managing sharded MongoDB cluster for air quality monitoring</p>
+                        <header class="header">
+            <div class="header-title">
+                <img src="/img.png" alt="Logo Qualité Air Inde" class="header-logo">
+                <h1><i class="fas fa-wind"></i> Air Quality Data Administration</h1>
+            </div>
+<!-- ✅ NOUVEAU - Liens corrigés -->
+        <nav class="nav">
+            <a href="/" class="active">Générale</a>
+            <a href="/statistics">Statistique</a> <!-- Utilise la route Express -->
+            <a href="/air-quality">Qualité Air</a> <!-- Route Express -->
+
+        </nav>
+            <button class="admin-btn" onclick="redirectToAdmin()">ADMIN</button>
         </header>
+
+       
 
         <div class="dashboard">
             <div class="stats-container">
