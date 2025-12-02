@@ -30,47 +30,74 @@
             min-height: calc(100vh - 40px);
         }
 
-        .header {
+         .header {
             background: white;
-            padding: 20px 30px;
+            padding: 15px 25px;
             border-bottom: 1px solid #e0e0e0;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            position: relative;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-logo {
+            height: 50px;
+            width: auto;
         }
 
         .header-title h1 {
-            font-size: 2em;
+            font-size: 1.8em;
             color: #2c3e50;
-            margin-bottom: 5px;
         }
 
-        .header-title p {
-            color: #666;
-            font-size: 1.1em;
+        .nav {
+            display: flex;
+            gap: 25px;
+            align-items: center;
+            flex-grow: 1;
+            justify-content: center;
         }
 
-        .back-button {
+        .nav a {
+            text-decoration: none;
+            color: #6ecec0;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .nav a.active {
+            color: white;
+            background: rgba(110, 206, 192, 0.7);
+            box-shadow: 0 2px 8px rgba(110, 206, 192, 0.3);
+        }
+        .nav a:not(.active):hover {
+            background: rgba(110, 206, 192, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .admin-btn {
             background: linear-gradient(135deg, #afe2da, #afe2da);
             color: white;
             border: none;
-            padding: 12px 25px;
+            padding: 10px 20px;
             border-radius: 8px;
             cursor: pointer;
             font-weight: 600;
-            font-size: 0.95em;
-            box-shadow: 0 4px 10px rgba(119, 184, 176, 0.3);
+            font-size: 0.9em;
+            box-shadow:0 4px 10px rgb(119, 184, 176);
             transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
         }
 
-        .back-button:hover {
+        .admin-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(119, 184, 176, 0.4);
+            box-shadow: 0 6px 20px rgb(119, 184, 176);
         }
 
         .city-header {
@@ -311,19 +338,21 @@
 </head>
 <body>
     <div class="container">
+        
         <header class="header">
             <div class="header-title">
-                <h1>🌍 Air Quality Monitoring - India</h1>
-                <p>Detailed city analysis</p>
+                <img src="/img.png" alt="Logo Qualité Air Inde" class="header-logo">
+                <h1> Air Quality Monitoring - India</h1>
+                
             </div>
-            <nav class="nav">
-                <a href="index.html">Map</a>
-                <a href="#" class="active">City Details</a>
-                <a href="#">Statistics</a>
-            </nav>
-            <a href="index.html" class="back-button">
-                ← Back to map
-            </a>
+<!-- ✅ NOUVEAU - Liens corrigés -->
+        <nav class="nav">
+            <a href="/" >Carte</a>
+            <a href="/statistics">Statistics</a> <!-- Utilise la route Express -->
+            <a href="/air-quality">Documentation</a> <!-- Route Express -->
+
+        </nav>
+            <button class="admin-btn" onclick="redirectToAdmin()">ADMIN</button>
         </header>
 
         <div class="city-header" id="city-header">
@@ -336,12 +365,7 @@
         </div>
 
         <div class="dashboard">
-            <div class="time-filter">
-                <button class="time-btn active" onclick="changeTimeRange('year')">📅 Yearly</button>
-                <button class="time-btn" onclick="changeTimeRange('month')">📊 Monthly</button>
-                <button class="time-btn" onclick="changeTimeRange('week')">📈 Weekly</button>
-                <button class="time-btn" onclick="changeTimeRange('day')">🌡️ Daily</button>
-            </div>
+
 
             <div id="alert-banner" class="alert-banner" style="display: none;">
                 <h3>⚠️ High Pollution Alert</h3>
@@ -790,6 +814,10 @@
             alertBanner.style.display = 'none';
         }
     }
+   
+function redirectToAdmin() {
+    window.location.href = "/admin";
+}
 
     // Changer la période d'analyse
     function changeTimeRange(range) {

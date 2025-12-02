@@ -237,6 +237,7 @@ async function loadFilters() {
 }
 
 // Performance tests
+// Performance tests - CORRIGÉ pour utiliser API_BASE
 async function runCityPerformanceTest() {
     const city = document.getElementById('testCity').value;
     if (!city) {
@@ -245,21 +246,30 @@ async function runCityPerformanceTest() {
     }
 
     try {
+        console.log('🧪 Test performance ville:', city);
         const response = await fetch(`${API_BASE}/performance/city-data?city=${encodeURIComponent(city)}`);
         const result = await response.json();
         
+        const resultsDiv = document.getElementById('cityTestResults');
         if (result.success) {
-            const resultsDiv = document.getElementById('cityTestResults');
             resultsDiv.innerHTML = `
-                <strong>Performance Results:</strong><br>
-                Execution Time: ${result.data.executionTime}<br>
-                Documents Returned: ${result.data.documentsReturned}<br>
-                <br><strong>Sample Data:</strong><br>
-                <pre>${JSON.stringify(result.data.sampleData, null, 2)}</pre>
+                <div class="test-result-success">
+                    <strong>✅ Performance Results:</strong><br>
+                    ⏱️ Execution Time: ${result.data.executionTime || 'N/A'}<br>
+                    📄 Documents Returned: ${result.data.documentsReturned || 'N/A'}<br>
+                    <br><strong>📊 Sample Data:</strong><br>
+                    <div class="sample-data">
+                        <pre>${JSON.stringify(result.data.sampleData || result.data || 'No data', null, 2)}</pre>
+                    </div>
+                </div>
             `;
+        } else {
+            resultsDiv.innerHTML = `<div class="test-result-error"><strong>❌ Error:</strong> ${result.message || 'Unknown error'}</div>`;
         }
     } catch (error) {
         console.error('Error running performance test:', error);
+        document.getElementById('cityTestResults').innerHTML = 
+            `<div class="test-result-error"><strong>❌ Error:</strong> ${error.message}</div>`;
     }
 }
 
@@ -271,94 +281,138 @@ async function runStationPerformanceTest() {
     }
 
     try {
+        console.log('🧪 Test performance station:', stationId);
         const response = await fetch(`${API_BASE}/performance/station-data?stationId=${encodeURIComponent(stationId)}`);
         const result = await response.json();
         
+        const resultsDiv = document.getElementById('stationTestResults');
         if (result.success) {
-            const resultsDiv = document.getElementById('stationTestResults');
             resultsDiv.innerHTML = `
-                <strong>Performance Results:</strong><br>
-                Execution Time: ${result.data.executionTime}<br>
-                Documents Returned: ${result.data.documentsReturned}<br>
-                <br><strong>Sample Data:</strong><br>
-                <pre>${JSON.stringify(result.data.sampleData, null, 2)}</pre>
+                <div class="test-result-success">
+                    <strong>✅ Performance Results:</strong><br>
+                    ⏱️ Execution Time: ${result.data.executionTime || 'N/A'}<br>
+                    📄 Documents Returned: ${result.data.documentsReturned || 'N/A'}<br>
+                    <br><strong>📊 Sample Data:</strong><br>
+                    <div class="sample-data">
+                        <pre>${JSON.stringify(result.data.sampleData || result.data || 'No data', null, 2)}</pre>
+                    </div>
+                </div>
             `;
+        } else {
+            resultsDiv.innerHTML = `<div class="test-result-error"><strong>❌ Error:</strong> ${result.message || 'Unknown error'}</div>`;
         }
     } catch (error) {
         console.error('Error running performance test:', error);
+        document.getElementById('stationTestResults').innerHTML = 
+            `<div class="test-result-error"><strong>❌ Error:</strong> ${error.message}</div>`;
     }
 }
-
-
-
-
 
 // Station CRUD operations
 function showAddStationForm() {
     document.getElementById('modalTitle').textContent = 'Add New Station';
     document.getElementById('stationForm').reset();
     document.getElementById('stationId').value = '';
+    // En mode ajout, on peut changer l'ID
+    document.getElementById('StationId').readOnly = false;
+    document.getElementById('StationId').style.backgroundColor = 'white';
     openModal('stationModal');
 }
 
 async function editStation(stationId) {
     try {
-        const response = await fetch(`/api/stations`);
+        console.log('🔍 Chargement station pour édition:', stationId);
+        
+        const response = await fetch(`${API_BASE}/stations/${stationId}`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const result = await response.json();
         
-        if (result.success) {
-            const station = result.data.find(s => s.StationId === stationId);
-            if (station) {
-                document.getElementById('modalTitle').textContent = 'Edit Station';
-                document.getElementById('stationId').value = station.StationId;
-                document.getElementById('StationId').value = station.StationId;
-                document.getElementById('City').value = station.City;
-                document.getElementById('Latitude').value = station.Latitude;
-                document.getElementById('Longitude').value = station.Longitude;
-                openModal('stationModal');
-            }
+        console.log('📋 Résultat chargement:', result);
+        
+        if (result.success && result.data) {
+            const station = result.data;
+            document.getElementById('modalTitle').textContent = 'Edit Station';
+            document.getElementById('stationId').value = station.StationId || station.stationId || '';
+            document.getElementById('StationId').value = station.StationId || station.stationId || '';
+            // En mode édition, l'ID est en lecture seule
+            document.getElementById('StationId').readOnly = true;
+            document.getElementById('StationId').style.backgroundColor = '#f5f5f5';
+            document.getElementById('City').value = station.City || station.city || '';
+            document.getElementById('Latitude').value = station.Latitude || station.latitude || '';
+            document.getElementById('Longitude').value = station.Longitude || station.longitude || '';
+            openModal('stationModal');
+        } else {
+            alert('Error loading station: ' + (result.message || 'Station not found'));
         }
     } catch (error) {
         console.error('Error loading station for edit:', error);
+        alert('Error loading station: ' + error.message);
     }
 }
 
 async function deleteStation(stationId) {
-    if (confirm(`Are you sure you want to delete station ${stationId}?`)) {
+    if (confirm(`Are you sure you want to delete station ${stationId}? This action cannot be undone.`)) {
         try {
-            const response = await fetch(`/api/stations/${stationId}`, {
+            console.log('🗑️ Suppression station:', stationId);
+            
+            const response = await fetch(`${API_BASE}/stations/${stationId}`, {
                 method: 'DELETE'
             });
+            
             const result = await response.json();
             
+            console.log('📋 Résultat suppression:', result);
+            
             if (result.success) {
-                alert('Station deleted successfully');
+                alert('✅ Station deleted successfully');
                 loadStations();
                 loadStats();
+                loadFilters(); // Recharger les filtres car les stations ont changé
             } else {
-                alert('Error deleting station: ' + result.message);
+                alert('❌ Error deleting station: ' + (result.message || 'Unknown error'));
             }
         } catch (error) {
             console.error('Error deleting station:', error);
-            alert('Error deleting station');
+            alert('❌ Error deleting station: ' + error.message);
         }
     }
 }
 
 // Station form submission
+// Station form submission - CORRIGÉ
 document.getElementById('stationForm').addEventListener('submit', async function(e) {
     e.preventDefault();
+    console.log('📝 Soumission formulaire station');
     
+    const stationId = document.getElementById('stationId').value;
     const formData = {
-        StationId: document.getElementById('StationId').value,
-        City: document.getElementById('City').value,
+        StationId: document.getElementById('StationId').value.trim(),
+        City: document.getElementById('City').value.trim(),
         Latitude: parseFloat(document.getElementById('Latitude').value),
         Longitude: parseFloat(document.getElementById('Longitude').value)
     };
 
-    const stationId = document.getElementById('stationId').value;
-    const url = stationId ? `/api/stations/${stationId}` : '/api/stations';
+    console.log('📊 Données formulaire:', { stationId, formData });
+
+    // Validation
+    if (!formData.StationId || !formData.City) {
+        alert('❌ Station ID and City are required');
+        return;
+    }
+
+    if (isNaN(formData.Latitude) || isNaN(formData.Longitude)) {
+        alert('❌ Latitude and Longitude must be valid numbers');
+        return;
+    }
+
     const method = stationId ? 'PUT' : 'POST';
+    const url = stationId ? `${API_BASE}/stations/${stationId}` : `${API_BASE}/stations`;
+
+    console.log('🌐 Envoi requête:', { method, url });
 
     try {
         const response = await fetch(url, {
@@ -371,17 +425,20 @@ document.getElementById('stationForm').addEventListener('submit', async function
         
         const result = await response.json();
         
+        console.log('📋 Réponse serveur:', result);
+        
         if (result.success) {
-            alert(stationId ? 'Station updated successfully' : 'Station created successfully');
+            alert(stationId ? '✅ Station updated successfully' : '✅ Station created successfully');
             closeModal('stationModal');
             loadStations();
             loadStats();
+            loadFilters(); // Recharger les filtres
         } else {
-            alert('Error: ' + result.message);
+            alert('❌ Error: ' + (result.message || 'Unknown error'));
         }
     } catch (error) {
         console.error('Error saving station:', error);
-        alert('Error saving station');
+        alert('❌ Error saving station: ' + error.message);
     }
 });
 

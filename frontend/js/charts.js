@@ -99,11 +99,16 @@ async function createPollutionChart() {
 }
 
 // Graphique statut des stations
+// Graphique statut des stations - VERSION CORRIGÉE
 async function createStationsStatusChart() {
     try {
+        console.log('🔍 Chargement données statut stations...');
+        
         const response = await fetch(`${API_BASE}/stations/status`);
-        if (!response.ok) throw new Error('Erreur API status');
+        if (!response.ok) throw new Error('Erreur API status: ' + response.status);
+        
         const statusData = await response.json();
+        console.log('📊 Données statut stations reçues:', statusData);
         
         const ctx = document.getElementById('stationsStatusChart').getContext('2d');
         
@@ -111,7 +116,21 @@ async function createStationsStatusChart() {
             currentCharts.stationsStatusChart.destroy();
         }
         
-        const filteredData = statusData.filter(item => item._id && item.count > 0);
+        // ✅ CORRECTION: Filtrer les entrées vides ou inconnues
+        const filteredData = statusData.filter(item => {
+            const isValidId = item._id && item._id.trim() !== '';
+            const hasCount = item.count && item.count > 0;
+            return isValidId && hasCount;
+        });
+        
+        console.log('📊 Données filtrées:', filteredData);
+        
+        // ✅ CORRECTION: Gérer le cas où aucune donnée n'est valide
+        if (filteredData.length === 0) {
+            console.warn('⚠️ Aucune donnée valide pour le graphique statut stations');
+            createFallbackChart('stationsStatusChart', 'doughnut', 'Statut des Stations');
+            return;
+        }
         
         currentCharts.stationsStatusChart = new Chart(ctx, {
             type: 'doughnut',
@@ -120,27 +139,59 @@ async function createStationsStatusChart() {
                     const statusMap = {
                         'Active': 'Actives',
                         'Inactive': 'Inactives', 
+                        'Maintenance': 'Maintenance',
                         'Unknown': 'Inconnues'
                     };
                     return statusMap[s._id] || s._id;
                 }),
                 datasets: [{
                     data: filteredData.map(s => s.count || 0),
-                    backgroundColor: ['#2ecc71', '#e74c3c', '#f39c12', '#3498db'],
-                    borderWidth: 1
+                    backgroundColor: ['#2ecc71', '#e74c3c', '#f39c12', '#3498db', '#9b59b6'],
+                    borderWidth: 2,
+                    borderColor: '#ffffff',
+                    hoverOffset: 20
                 }]
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: true,
                 plugins: {
                     legend: {
                         position: 'right',
+                        labels: {
+                            padding: 20,
+                            font: {
+                                size: 12
+                            }
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Répartition par statut',
+                        font: {
+                            size: 14,
+                            weight: 'bold'
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.raw || 0;
+                                const total = filteredData.reduce((sum, item) => sum + (item.count || 0), 0);
+                                const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                                return `${label}: ${value} stations (${percentage}%)`;
+                            }
+                        }
                     }
                 }
             }
         });
+        
+        console.log('✅ Graphique statut stations créé avec succès');
+        
     } catch (error) {
-        console.error('Erreur création graphique statut stations:', error);
+        console.error('❌ Erreur création graphique statut stations:', error);
         createFallbackChart('stationsStatusChart', 'doughnut', 'Statut des Stations');
     }
 }
@@ -191,11 +242,16 @@ async function createCityPollutionChart() {
 }
 
 // Graphique stations par ville
+// Graphique stations par ville - VERSION CORRIGÉE
 async function createStationsByCityChart() {
     try {
+        console.log('🔍 Chargement données stations par ville...');
+        
         const response = await fetch(`${API_BASE}/stations/by-city`);
-        if (!response.ok) throw new Error('Erreur API stations by city');
+        if (!response.ok) throw new Error('Erreur API stations by city: ' + response.status);
+        
         const stationsData = await response.json();
+        console.log('📊 Données stations par ville reçues:', stationsData);
         
         const ctx = document.getElementById('stationsByCityChart').getContext('2d');
         
@@ -203,28 +259,110 @@ async function createStationsByCityChart() {
             currentCharts.stationsByCityChart.destroy();
         }
         
+        // ✅ CORRECTION: Filtrer et limiter à 10 villes
+        const filteredData = stationsData
+            .filter(item => item._id && item._id.trim() !== '')
+            .sort((a, b) => (b.count || 0) - (a.count || 0))
+            .slice(0, 10);
+        
+        console.log('📊 Données filtrées pour graphique:', filteredData);
+        
+        // ✅ CORRECTION: Gérer le cas où aucune donnée n'est valide
+        if (filteredData.length === 0) {
+            console.warn('⚠️ Aucune donnée valide pour le graphique stations par ville');
+            createFallbackChart('stationsByCityChart', 'bar', 'Stations par Ville');
+            return;
+        }
+        
+        // ✅ CORRECTION: Palette de couleurs pastel pour votre thème
+        const pastelColors = [
+            '#6ecec0', '#afb8e2', '#afd1e2', '#9bd3ae', 
+            '#f9c58d', '#f7a8b8', '#c5a6e6', '#a2d5f2',
+            '#ffcc99', '#99ccff'
+        ];
+        
         currentCharts.stationsByCityChart = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: stationsData.map(s => s._id || 'Ville inconnue'),
+                labels: filteredData.map(s => s._id || 'Ville inconnue'),
                 datasets: [{
                     label: 'Nombre de stations',
-                    data: stationsData.map(s => s.count || 0),
-                    backgroundColor: '#3498db',
-                    borderWidth: 0
+                    data: filteredData.map(s => s.count || 0),
+                    backgroundColor: pastelColors.slice(0, filteredData.length),
+                    borderColor: '#2c3e50',
+                    borderWidth: 1,
+                    borderRadius: 6,
+                    barPercentage: 0.7,
+                    categoryPercentage: 0.8
                 }]
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: true,
                 plugins: {
                     legend: {
                         display: false
+                    },
+                    title: {
+                        display: true,
+                        text: 'Top 10 des villes par nombre de stations',
+                        font: {
+                            size: 14,
+                            weight: 'bold'
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(44, 62, 80, 0.9)',
+                        titleColor: '#ffffff',
+                        bodyColor: '#ffffff',
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.dataset.label}: ${context.raw}`;
+                            }
+                        }
                     }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Nombre de stations',
+                            font: {
+                                weight: 'bold'
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        },
+                        ticks: {
+                            stepSize: 5
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 45,
+                            font: {
+                                size: 11
+                            }
+                        }
+                    }
+                },
+                animation: {
+                    duration: 1000,
+                    easing: 'easeOutQuart'
                 }
             }
         });
+        
+        console.log('✅ Graphique stations par ville créé avec succès');
+        
     } catch (error) {
-        console.error('Erreur création graphique stations par ville:', error);
+        console.error('❌ Erreur création graphique stations par ville:', error);
         createFallbackChart('stationsByCityChart', 'bar', 'Stations par Ville');
     }
 }

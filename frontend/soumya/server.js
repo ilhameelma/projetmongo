@@ -1094,8 +1094,17 @@ app.get('/admin', (req, res) => {
     }
     res.sendFile(filePath);
 });
+app.get('/img.png', (req, res) => {
+    const imagePath = path.join(frontendRoot, '../img.png');
+    if (fs.existsSync(imagePath)) {
+        res.sendFile(imagePath);
+    } else {
+        console.error('❌ Image non trouvée:', imagePath);
+        res.status(404).send('Image non trouvée');
+    }
+});
 app.get('/air-quality', (req, res) => {
-    const filePath = path.join(frontendRoot, 'air_quality.html');
+    const filePath = path.join(frontendRoot, 'airQuality.html');
     console.log('🎯 Servir documentatio depuis:', filePath);
     if (!fs.existsSync(filePath)) {
         return res.status(404).send('Fichier admin non trouvé: ' + filePath);
@@ -1420,6 +1429,217 @@ async function startServer() {
 // Route pour la page de documentation airQuality
 app.get('/airQuality', (req, res) => {
     res.sendFile(path.join(__dirname, '..',airQuality.html));
+});
+// =============================================
+// ROUTES CRUD RÉELLES POUR LES STATIONS
+// =============================================
+
+// GET une station spécifique (pour l'édition)
+app.get('/api/admin/stations/:id', async (req, res) => {
+    try {
+        if (!db) {
+            return res.status(500).json({ error: "Base de données non connectée" });
+        }
+
+        const { id } = req.params;
+        
+        const station = await db.collection('stations').findOne({ 
+            StationId: id 
+        });
+
+        if (!station) {
+            return res.status(404).json({ 
+                success: false, 
+                message: "Station non trouvée" 
+            });
+        }
+
+        res.json({
+            success: true,
+            data: station
+        });
+    } catch (error) {
+        console.error('Erreur GET station:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+// POST - Créer une nouvelle station (REEL)
+app.post('/api/admin/stations', async (req, res) => {
+    try {
+        if (!db) {
+            return res.status(500).json({ error: "Base de données non connectée" });
+        }
+
+        const { StationId, City, Latitude, Longitude } = req.body;
+        
+        // Validation
+        if (!StationId || !City || !Latitude || !Longitude) {
+            return res.status(400).json({ 
+                success: false, 
+                message: "Tous les champs sont requis" 
+            });
+        }
+
+        // Vérifier si la station existe déjà
+        const existingStation = await db.collection('stations').findOne({ 
+            StationId: StationId 
+        });
+
+        if (existingStation) {
+            return res.status(409).json({ 
+                success: false, 
+                message: "Une station avec cet ID existe déjà" 
+            });
+        }
+
+        // Créer la nouvelle station
+        const newStation = {
+            StationId,
+            City,
+            Latitude: parseFloat(Latitude),
+            Longitude: parseFloat(Longitude),
+            createdAt: new Date(),
+            updatedAt: new Date()
+        };
+
+        const result = await db.collection('stations').insertOne(newStation);
+
+        res.json({
+            success: true,
+            message: "Station créée avec succès",
+            data: {
+                insertedId: result.insertedId,
+                station: newStation
+            }
+        });
+    } catch (error) {
+        console.error('Erreur création station:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+// PUT - Mettre à jour une station (REEL)
+app.put('/api/admin/stations/:id', async (req, res) => {
+    try {
+        if (!db) {
+            return res.status(500).json({ error: "Base de données non connectée" });
+        }
+
+        const { id } = req.params;
+        const { City, Latitude, Longitude } = req.body;
+        
+        // Validation
+        if (!City || !Latitude || !Longitude) {
+            return res.status(400).json({ 
+                success: false, 
+                message: "Tous les champs sont requis" 
+            });
+        }
+
+        // Vérifier si la station existe
+        const existingStation = await db.collection('stations').findOne({ 
+            StationId: id 
+        });
+
+        if (!existingStation) {
+            return res.status(404).json({ 
+                success: false, 
+                message: "Station non trouvée" 
+            });
+        }
+
+        // Mettre à jour la station
+        const updateData = {
+            City,
+            Latitude: parseFloat(Latitude),
+            Longitude: parseFloat(Longitude),
+            updatedAt: new Date()
+        };
+
+        const result = await db.collection('stations').updateOne(
+            { StationId: id },
+            { $set: updateData }
+        );
+
+        if (result.modifiedCount === 0) {
+            return res.status(404).json({ 
+                success: false, 
+                message: "Aucune modification effectuée" 
+            });
+        }
+
+        res.json({
+            success: true,
+            message: "Station mise à jour avec succès",
+            data: {
+                stationId: id,
+                ...updateData
+            }
+        });
+    } catch (error) {
+        console.error('Erreur mise à jour station:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+// DELETE - Supprimer une station (REEL)
+app.delete('/api/admin/stations/:id', async (req, res) => {
+    try {
+        if (!db) {
+            return res.status(500).json({ error: "Base de données non connectée" });
+        }
+
+        const { id } = req.params;
+
+        // Vérifier si la station existe
+        const existingStation = await db.collection('stations').findOne({ 
+            StationId: id 
+        });
+
+        if (!existingStation) {
+            return res.status(404).json({ 
+                success: false, 
+                message: "Station non trouvée" 
+            });
+        }
+
+        // Supprimer la station
+        const result = await db.collection('stations').deleteOne({ 
+            StationId: id 
+        });
+
+        if (result.deletedCount === 0) {
+            return res.status(404).json({ 
+                success: false, 
+                message: "Erreur lors de la suppression" 
+            });
+        }
+
+        res.json({
+            success: true,
+            message: "Station supprimée avec succès",
+            data: {
+                stationId: id,
+                deletedCount: result.deletedCount
+            }
+        });
+    } catch (error) {
+        console.error('Erreur suppression station:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
 });
 
 startServer();
